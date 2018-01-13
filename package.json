@@ -1,0 +1,20 @@
+{
+  "main": "./integration.js",
+  "name": "phantom",
+  "version": "1.0.0-beta",
+  "private": true,
+  "license": "MIT",
+  "author": "Polarity",
+  "dependencies": {
+    "request": "^2.75",
+    "async": "2.1.4"
+  },
+  "devDependencies": {
+    "chai": "~3.5",
+    "mocha": "~3.2"
+  },
+  "scripts": {
+    "test": "mocha --recursive",
+    "dev": "./sync.js"
+  }
+}
