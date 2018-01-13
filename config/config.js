@@ -15,7 +15,7 @@ module.exports = {
      * @type String
      * @required
      */
-    acronym: "phntm",
+    acronym: "PH",
     /**
      * Description for this integration which is displayed in the Polarity integrations user interface
      *
@@ -23,7 +23,7 @@ module.exports = {
      * @optional
      */
     description: "TODO phantom integration description",
-    entityTypes: [&#39;ipv4&#39;,&#39;url&#39;],
+    entityTypes: ['IPv4'],
     /**
      * An array of style files (css or less) that will be included for your integration. Any styles specified in
      * the below files can be used in your custom template.
@@ -32,7 +32,7 @@ module.exports = {
      * @optional
      */
     "styles": [
-        "./styles/qradar.less"
+        "./styles/phantom.less"
     ],
     /**
      * Provide custom component logic and template for rendering the integration details block.  If you do not
@@ -60,23 +60,19 @@ module.exports = {
     },
     request: {
         // Provide the path to your certFile. Leave an empty string to ignore this option.
-        // Relative paths are relative to the STAXX integration's root directory
         cert: '',
         // Provide the path to your private key. Leave an empty string to ignore this option.
-        // Relative paths are relative to the STAXX integration's root directory
         key: '',
         // Provide the key passphrase if required.  Leave an empty string to ignore this option.
-        // Relative paths are relative to the STAXX integration's root directory
         passphrase: '',
         // Provide the Certificate Authority. Leave an empty string to ignore this option.
-        // Relative paths are relative to the STAXX integration's root directory
         ca: '',
         // An HTTP proxy to be used. Supports proxy Auth with Basic Auth, identical to support for
         // the url parameter (by embedding the auth info in the uri)
         proxy: '',
         /**
          * If set to false, the integeration will ignore SSL errors.  This will allow the integration to connect
-         * to STAXX servers without valid SSL certificates.  Please note that we do NOT recommending setting this
+         * to the servers without valid SSL certificates.  Please note that we do NOT recommending setting this
          * to false in a production environment.
          */
         rejectUnauthorized: true
@@ -104,7 +100,7 @@ module.exports = {
             key: "exampleKey",
             name: "exampleName",
             description: "example description of this option",
-            default: "",
+            default: "exampleDefault",
             type: "text",
             userCanEdit: false,
             adminOnly: true

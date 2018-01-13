@@ -11,7 +11,10 @@
   },
   "devDependencies": {
     "chai": "~3.5",
-    "mocha": "~3.2"
+    "mocha": "~3.2",
+    "node-ssh": "^5.0.0",
+    "node-watch": "^0.5.5",
+    "scp2": "^0.5.0"
   },
   "scripts": {
     "test": "mocha --recursive",
