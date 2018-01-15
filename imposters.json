@@ -1,0 +1,258 @@
+{
+  "imposters": [
+    {
+      "port": 5555,
+      "protocol": "https",
+      "name": "origin",
+      "stubs": [
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/search",
+                "query": {
+                  "query": "999.999.999.999",
+                  "categories": "container"
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "body": {
+                  "count": 0,
+                  "num_pages": 1,
+                  "results": [],
+                  "page": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/search",
+                "query": {
+                  "query": "123.123.123.123",
+                  "categories": "container"
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "body": {
+                  "count": 1,
+                  "num_pages": 1,
+                  "results": [
+                    {
+                      "url": "https://localhost/mission/999F/",
+                      "category": "container",
+                      "verbose": "Container",
+                      "match": {
+                        "tags": "<b>172.217.15.110</b>"
+                      },
+                      "id": "999"
+                    }
+                  ],
+                  "page": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/search",
+                "query": {
+                  "query": "111.111.111.111",
+                  "categories": "container"
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "body": {
+                  "count": 1,
+                  "num_pages": 1,
+                  "results": [
+                    {
+                      "url": "https://localhost/mission/1/",
+                      "category": "container",
+                      "verbose": "Container",
+                      "match": {
+                        "tags": "<b>172.217.15.110</b>"
+                      },
+                      "id": "1"
+                    }
+                  ],
+                  "page": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/container/1"
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "body": {
+                  "in_case": false,
+                  "closing_rule_run": null,
+                  "sensitivity": "amber",
+                  "closing_owner": null,
+                  "create_time": "2018-01-11T14:10:05.801332Z",
+                  "owner": 1,
+                  "id": 1,
+                  "ingest_app": null,
+                  "close_time": null,
+                  "open_time": null,
+                  "current_phase": null,
+                  "container_type": "default",
+                  "label": "events",
+                  "due_time": "2018-01-11T15:09:00.000000Z",
+                  "version": 1,
+                  "asset": null,
+                  "status": "new",
+                  "owner_name": null,
+                  "hash": "b342fcaf2ef003c7cc2b77c6434730a7",
+                  "description": "This is a bad event, something really bad happened, and its bad.  Fix all the security.",
+                  "tags": [
+                    "111.111.111.111",
+                    "security_breach",
+                    "eventy_boi",
+                    "bad_event"
+                  ],
+                  "start_time": "2018-01-11T14:10:05.804051Z",
+                  "kill_chain": null,
+                  "artifact_update_time": "2018-01-11T14:10:05.801306Z",
+                  "artifact_count": 0,
+                  "data": {},
+                  "custom_fields": {},
+                  "severity": "high",
+                  "name": "Nathan test event",
+                  "source_data_identifier": "5c72b4b5-e4a2-411a-9136-c05e8ae69a86",
+                  "end_time": null,
+                  "container_update_time": "2018-01-13T22:11:24.248863Z"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/search",
+                "query": {
+                  "query": "222.222.222.222",
+                  "categories": "container"
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "body": {
+                  "count": 1,
+                  "num_pages": 1,
+                  "results": [
+                    {
+                      "url": "https://localhost/mission/2/",
+                      "category": "container",
+                      "verbose": "Container",
+                      "match": {
+                        "tags": "<b>172.217.15.110</b>"
+                      },
+                      "id": "2"
+                    }
+                  ],
+                  "page": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/container/2"
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "body": {
+                  "in_case": false,
+                  "closing_rule_run": null,
+                  "sensitivity": "amber",
+                  "closing_owner": null,
+                  "create_time": "2018-01-11T14:10:05.801332Z",
+                  "owner": 1,
+                  "id": 2,
+                  "ingest_app": null,
+                  "close_time": null,
+                  "open_time": null,
+                  "current_phase": null,
+                  "container_type": "default",
+                  "label": "events",
+                  "due_time": "2018-01-11T15:09:00.000000Z",
+                  "version": 1,
+                  "asset": null,
+                  "status": "new",
+                  "owner_name": null,
+                  "hash": "b342fcaf2ef003c7cc2b77c6434730a7",
+                  "description": "This is a bad event, something really bad happened, and its bad.  Fix all the security.",
+                  "tags": [
+                    "222.222.222.222",
+                    "security_breach",
+                    "eventy_boi",
+                    "bad_event"
+                  ],
+                  "start_time": "2018-01-11T14:10:05.804051Z",
+                  "kill_chain": null,
+                  "artifact_update_time": "2018-01-11T14:10:05.801306Z",
+                  "artifact_count": 0,
+                  "data": {},
+                  "custom_fields": {},
+                  "severity": "high",
+                  "name": "Nathan test event",
+                  "source_data_identifier": "5c72b4b5-e4a2-411a-9136-c05e8ae69a86",
+                  "end_time": null,
+                  "container_update_time": "2018-01-13T22:11:24.248863Z"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "responses": [
+            {
+              "is": {
+                "statusCode": 500
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

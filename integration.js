@@ -1,12 +1,60 @@
 let async = require('async');
+let request = require('request');
+var qs = require('querystring');
 let config = require('./config/config');
 
 let Logger;
 
 function doLookup(entities, options, callback) {
-    Logger.info({ entities: entities }, "Entities received by integration");
+    Logger.trace({ entities: entities }, "Entities received by integration");
 
-    let results = [
+    let results = [];
+
+    async.each(entities, (entity, callback) => {
+        request('https://localhost:5555/rest/search', {
+            qs: {
+                query: entity.value,
+                categories: 'container'
+            },
+            strictSSL: false,
+            json: true
+        },
+            (err, resp, body) => {
+                if (body.count === 0) {
+                    callback(null, null);
+                    return;
+                }
+
+                let id = body.results[0].id
+
+                request('https://localhost:5555/rest/container/' + id,
+                    {
+                        strictSSL: false,
+                        json: true
+                    },
+                    (err, resp, body) => {
+                        if (resp.statusCode !== 200) {
+                            Logger.error({ error: err, id: id, body: body }, 'error looking up container with id ' + id);
+                            callback(new Error('error looking up container ' + id));
+                            return;
+                        }
+
+                        results.push({
+                            data: {
+                                details: [
+                                    body
+                                ]
+                            }
+                        });
+                        callback();
+                    });
+            });
+    }, (err) => {
+        callback(err, results);
+    });
+
+    /*
+    results = [
         {
             entity: entities[0],
             data: {
@@ -59,6 +107,7 @@ function doLookup(entities, options, callback) {
     Logger.info({ results: results }, "Results sent to client");
 
     callback(null, results);
+    */
 }
 
 function startup(logger) {
