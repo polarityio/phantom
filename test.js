@@ -1,7 +1,7 @@
 let assert = require('chai').assert;
 
 let bunyan = require('bunyan');
-let logger = bunyan.createLogger({ name: 'mocha-test', level: bunyan.ERROR });
+let logger = bunyan.createLogger({ name: 'mocha-test', level: bunyan.TRACE });
 let integration = require('./integration');
 
 integration.startup(logger);
@@ -12,9 +12,15 @@ const MISSING_IP = '999.999.999.999';
 const MISSING_CONTAINER_IP = '123.123.123.123';
 
 describe('Polarity Phantom Integration', () => {
+    function getOptions() {
+        return {
+            host: 'https://localhost:5555',
+            rejectUnauthorized: false
+        };
+    }
     describe('displaying events', () => {
         it('should display events that match a given ip', (done) => {
-            integration.doLookup([{ value: GOOD_IP_1 }], {}, (err, result) => {
+            integration.doLookup([{ value: GOOD_IP_1 }], getOptions(), (err, result) => {
                 if (err) {
                     done(err);
                 } else {
@@ -27,7 +33,7 @@ describe('Polarity Phantom Integration', () => {
         });
 
         it('should display events that match a different ip', (done) => {
-            integration.doLookup([{ value: GOOD_IP_2 }], {}, (err, result) => {
+            integration.doLookup([{ value: GOOD_IP_2 }], getOptions(), (err, result) => {
                 if (err) {
                     done(err);
                 } else {
@@ -40,7 +46,7 @@ describe('Polarity Phantom Integration', () => {
         });
 
         it('should display all events when passed multiple entities', (done) => {
-            integration.doLookup([{ value: GOOD_IP_1 }, { value: GOOD_IP_2 }], {}, (err, result) => {
+            integration.doLookup([{ value: GOOD_IP_1 }, { value: GOOD_IP_2 }], getOptions(), (err, result) => {
                 if (err) {
                     done(err);
                 } else {
@@ -54,7 +60,7 @@ describe('Polarity Phantom Integration', () => {
         });
 
         it('should handle entities with no matching search results', (done) => {
-            integration.doLookup([{ value: MISSING_IP }], {}, (err, result) => {
+            integration.doLookup([{ value: MISSING_IP }], getOptions(), (err, result) => {
                 if (err) {
                     done(err);
                 } else {
@@ -65,8 +71,9 @@ describe('Polarity Phantom Integration', () => {
         });
 
         it('should handle missing containers in phantom', (done) => {
-            integration.doLookup([{ value: MISSING_CONTAINER_IP }], {}, (err, result) => {
+            integration.doLookup([{ value: MISSING_CONTAINER_IP }], getOptions(), (err, result) => {
                 assert.isOk(err, 'no error was returned');
+                assert.equal(err.message, 'error looking up container 999');
                 done();
             });
         });
@@ -77,5 +84,43 @@ describe('Polarity Phantom Integration', () => {
         it('should allow approval on playbooks for a given event???', () => {
             assert.isOk(false, 'test not implemented');
         });
+    });
+
+    describe('option validation', () => {
+        function checkRequire(option, done) {
+            let options = {};
+            options[option] = '';
+
+            integration.validateOptions(options, (_, errors) => {
+                assert.equal(errors[0].key, option);
+                done();
+            });
+        }
+        it('should require a host', (done) => {
+            checkRequire('host', done);
+        });
+
+        it('should pass when all values are provided', (done) => {
+            integration.validateOptions({
+                host: 'http://localhost:8080/'
+            }, (_, errors) => {
+                assert.isEmpty(errors);
+                done();
+            });
+        });
+
+        /*
+
+            function validateOption(errors, options, optionName, errMessage) {
+                if (typeof options[optionName].value !== 'string' ||
+                    (typeof options[optionName].value === 'string' && options[optionName].value.length === 0)) {
+                    errors.push({
+                        key: optionName,
+                        message: errMessage
+                    });
+                }
+            }
+
+        */
     });
 });

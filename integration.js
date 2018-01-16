@@ -2,34 +2,43 @@ let async = require('async');
 let request = require('request');
 var qs = require('querystring');
 let config = require('./config/config');
+let url = require('url');
 
 let Logger;
 
-function doLookup(entities, options, callback) {
+function doLookup(entities, integrationOptions, callback) {
     Logger.trace({ entities: entities }, "Entities received by integration");
 
     let results = [];
 
     async.each(entities, (entity, callback) => {
-        request('https://localhost:5555/rest/search', {
+        let url = integrationOptions.host + '/rest/search';
+        let requestOptions = {
+            url: url,
             qs: {
-                query: entity.value,
-                categories: 'container'
+                "query": entity.value,
+                "categories": 'container'
             },
-            strictSSL: false,
+            strictSSL: integrationOptions.rejectUnauthorized,
             json: true
-        },
+        };
+    
+        Logger.trace({ options: requestOptions }, 'Request options sent');
+
+        request(requestOptions,
             (err, resp, body) => {
-                if (body.count === 0) {
+                Logger.trace({ results: body, error: err, response: resp}, 'Results of entity lookup');
+
+                if (!body || !body.results || body.results.length === 0) {
                     callback(null, null);
                     return;
                 }
 
                 let id = body.results[0].id
 
-                request('https://localhost:5555/rest/container/' + id,
+                request(integrationOptions.host + '/rest/container/' + id,
                     {
-                        strictSSL: false,
+                        strictSSL: integrationOptions.rejectUnauthorized,
                         json: true
                     },
                     (err, resp, body) => {
@@ -115,7 +124,13 @@ function startup(logger) {
 }
 
 function validateOptions(options, callback) {
-    callback(null, []);
+    let errors = [];
+
+    if (!options.host) {
+        errors.push({ key: 'host', message: 'a valid hostname is required' });
+    }
+
+    callback(null, errors);
 }
 
 module.exports = {
