@@ -14,6 +14,11 @@
                   "query": "999.999.999.999",
                   "categories": "container"
                 }
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
               }
             }
           ],
@@ -38,6 +43,11 @@
                 "query": {
                   "query": "123.123.123.123",
                   "categories": "container"
+                }
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
                 }
               }
             }
@@ -74,6 +84,11 @@
                   "query": "111.111.111.111",
                   "categories": "container"
                 }
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
               }
             }
           ],
@@ -105,6 +120,11 @@
             {
               "equals": {
                 "path": "/rest/container/1"
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
               }
             }
           ],
@@ -163,6 +183,11 @@
                   "query": "222.222.222.222",
                   "categories": "container"
                 }
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
               }
             }
           ],
@@ -194,6 +219,11 @@
             {
               "equals": {
                 "path": "/rest/container/2"
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
               }
             }
           ],
@@ -238,6 +268,130 @@
                   "source_data_identifier": "5c72b4b5-e4a2-411a-9136-c05e8ae69a86",
                   "end_time": null,
                   "container_update_time": "2018-01-13T22:11:24.248863Z"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/playbook_run"
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": {
+                  "playbook_run_id": "${ID}"
+                }
+              },
+              "_behaviors": {
+                "copy": [
+                  {
+                    "from": "body",
+                    "into": "${ID}",
+                    "using": {
+                      "method": "jsonpath",
+                      "selector": "$.playbook_id"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/playbook_run/1"
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "body": {
+                  "status": "running"
+                }
+              }
+            },
+            {
+              "is": {
+                "body": {
+                  "action_exec": [],
+                  "cancelled": "",
+                  "container": 1,
+                  "id": 1,
+                  "last_artifact": 160,
+                  "log_level": 1,
+                  "message": "{\"message\":\"\",\"playbook_run_id\":46,\"result\":[{\"action\":\"whois ip\",\"app_runs\":[{\"action\":\"whois ip\",\"action_run_id\":46,\"app_message\":\"Registry: arin\\nASN: 8075\\nCountry: US\\nNets:\\nRange: 134.170.0.0 - 134.170.255.255\\nAddress: One Microsoft Way\",\"app_name\":\"WHOIS\",\"app_run_id\":55,\"asset_name\":\"whois\",\"parameter\":\"{\\\"ip\\\": \\\"134.170.188.221\\\"}\",\"per_parameter_status\":\"success\"}],\"close_time\":\"2016-01-15T22:15:58.05319+00:00\",\"create_time\":\"2016-01-15T22:15:55.252+00:00\",\"id\":46,\"message\":\"1 actions succeeded\",\"status\":\"success\",\"type\":\"investigate\"},{\"action\":\"whois domain\",\"app_runs\":[{\"action\":\"whois domain\",\"action_run_id\":47,\"app_message\":\"Organization: Amazon Technologies, Inc.\\nDomain: amazon.com\\nCity: Reno\\nName: Hostmaster, Amazon Legal Dept.\\nCountry: US\",\"app_name\":\"WHOIS\",\"app_run_id\":56,\"asset_name\":\"whois\",\"parameter\":\"{\\\"domain\\\": \\\"amazon.com\\\"}\",\"per_parameter_status\":\"success\"}],\"close_time\":\"2016-01-15T22:16:00.798179+00:00\",\"create_time\":\"2016-01-15T22:15:58.062+00:00\",\"id\":47,\"message\":\"1 actions succeeded\",\"status\":\"success\",\"type\":\"investigate\"}],\"status\":\"success\"}\n",
+                  "owner": 4,
+                  "playbook": 42,
+                  "start_time": "2016-01-15T22:15:55.171000Z",
+                  "status": "success",
+                  "test_mode": false,
+                  "update_time": "2016-01-15T22:16:00.813027Z",
+                  "version": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/playbook_run/2"
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "body": {
+                  "status": "running"
+                }
+              }
+            },
+            {
+              "is": {
+                "body": {
+                  "action_exec": [],
+                  "cancelled": "",
+                  "container": 2,
+                  "id": 2,
+                  "last_artifact": 160,
+                  "log_level": 1,
+                  "message": "{\"message\":\"\",\"playbook_run_id\":46,\"result\":[{\"action\":\"whois ip\",\"app_runs\":[{\"action\":\"whois ip\",\"action_run_id\":46,\"app_message\":\"Registry: arin\\nASN: 8075\\nCountry: US\\nNets:\\nRange: 134.170.0.0 - 134.170.255.255\\nAddress: One Microsoft Way\",\"app_name\":\"WHOIS\",\"app_run_id\":55,\"asset_name\":\"whois\",\"parameter\":\"{\\\"ip\\\": \\\"134.170.188.221\\\"}\",\"per_parameter_status\":\"success\"}],\"close_time\":\"2016-01-15T22:15:58.05319+00:00\",\"create_time\":\"2016-01-15T22:15:55.252+00:00\",\"id\":46,\"message\":\"1 actions succeeded\",\"status\":\"success\",\"type\":\"investigate\"},{\"action\":\"whois domain\",\"app_runs\":[{\"action\":\"whois domain\",\"action_run_id\":47,\"app_message\":\"Organization: Amazon Technologies, Inc.\\nDomain: amazon.com\\nCity: Reno\\nName: Hostmaster, Amazon Legal Dept.\\nCountry: US\",\"app_name\":\"WHOIS\",\"app_run_id\":56,\"asset_name\":\"whois\",\"parameter\":\"{\\\"domain\\\": \\\"amazon.com\\\"}\",\"per_parameter_status\":\"success\"}],\"close_time\":\"2016-01-15T22:16:00.798179+00:00\",\"create_time\":\"2016-01-15T22:15:58.062+00:00\",\"id\":47,\"message\":\"1 actions succeeded\",\"status\":\"success\",\"type\":\"investigate\"}],\"status\":\"success\"}\n",
+                  "owner": 4,
+                  "playbook": 42,
+                  "start_time": "2016-01-15T22:15:55.171000Z",
+                  "status": "failed",
+                  "test_mode": false,
+                  "update_time": "2016-01-15T22:16:00.813027Z",
+                  "version": 1
                 }
               }
             }

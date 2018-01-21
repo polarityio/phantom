@@ -1,7 +1,7 @@
 let assert = require('chai').assert;
 
 let bunyan = require('bunyan');
-let logger = bunyan.createLogger({ name: 'mocha-test', level: bunyan.TRACE });
+let logger = bunyan.createLogger({ name: 'mocha-test', level: bunyan.ERROR });
 let integration = require('./integration');
 
 integration.startup(logger);
@@ -15,7 +15,9 @@ describe('Polarity Phantom Integration', () => {
     function getOptions() {
         return {
             host: 'https://localhost:5555',
-            rejectUnauthorized: false
+            rejectUnauthorized: false,
+            username: 'mocha',
+            password: 'test'
         };
     }
     describe('displaying events', () => {
@@ -26,7 +28,33 @@ describe('Polarity Phantom Integration', () => {
                 } else {
                     assert.isNotEmpty(result, 'got no results back');
                     assert.equal(result.length, 1);
-                    assert.equal(GOOD_IP_1, result[0].data.details[0].tags[0])
+                    assert.equal(GOOD_IP_1, result[0].data.details[0].tags[0]);
+                    done();
+                }
+            });
+        });
+
+        it('should return the corresponding entity when doing a lookup', (done) => {
+            integration.doLookup([{ value: GOOD_IP_1 }], getOptions(), (err, result) => {
+                if (err) {
+                    done(err);
+                } else {
+                    assert.isNotEmpty(result, 'got no results back');
+                    assert.equal(result.length, 1);
+                    assert.equal(GOOD_IP_1, result[0].entity.value);
+                    done();
+                }
+            });
+        });
+
+        it('should return the summary', (done) => {
+            integration.doLookup([{ value: GOOD_IP_1 }], getOptions(), (err, result) => {
+                if (err) {
+                    done(err);
+                } else {
+                    assert.isNotEmpty(result, 'got no results back');
+                    assert.equal(result.length, 1);
+                    assert.equal('test', result[0].data.summary[0]);
                     done();
                 }
             });
@@ -80,47 +108,60 @@ describe('Polarity Phantom Integration', () => {
     });
 
     describe('taking action on events', () => {
+        it('should allow running actions on events', (done) => {
+            integration.runPlaybook('1', '1', getOptions(), (err, result) => {
+                assert.isNotOk(err);
+                assert.equal('success', result.status);
+                done();
+            });
+        });
 
-        it('should allow approval on playbooks for a given event???', () => {
-            assert.isOk(false, 'test not implemented');
+        it('should report failure', (done) => {
+            integration.runPlaybook('2', '2', getOptions(), (err, result) => {
+                assert.isNotOk(err);
+                assert.equal('failed', result.status);
+                done();
+            });
         });
     });
 
     describe('option validation', () => {
         function checkRequire(option, done) {
-            let options = {};
-            options[option] = '';
+            let options = {
+                host: 'asdf',
+                username: 'asdf',
+                password: 'asdf'
+            };
+
+            delete options[option];
 
             integration.validateOptions(options, (_, errors) => {
                 assert.equal(errors[0].key, option);
                 done();
             });
         }
+
         it('should require a host', (done) => {
             checkRequire('host', done);
         });
 
+        it('should require a username', (done) => {
+            checkRequire('username', done);
+        });
+
+        it('should require a password', (done) => {
+            checkRequire('password', done);
+        });
+
         it('should pass when all values are provided', (done) => {
             integration.validateOptions({
-                host: 'http://localhost:8080/'
+                host: 'http://localhost:8080/',
+                username: 'mocha',
+                password: 'test'
             }, (_, errors) => {
                 assert.isEmpty(errors);
                 done();
             });
         });
-
-        /*
-
-            function validateOption(errors, options, optionName, errMessage) {
-                if (typeof options[optionName].value !== 'string' ||
-                    (typeof options[optionName].value === 'string' && options[optionName].value.length === 0)) {
-                    errors.push({
-                        key: optionName,
-                        message: errMessage
-                    });
-                }
-            }
-
-        */
     });
 });

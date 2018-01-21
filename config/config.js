@@ -104,6 +104,24 @@ module.exports = {
             type: "text",
             userCanEdit: false,
             adminOnly: true
+        },
+        {
+            key: "username",
+            name: "Username",
+            description: "username",
+            default: "",
+            type: "text",
+            userCanEdit: true,
+            adminOnly: false
+        },
+        {
+            key: "password",
+            name: "Password",
+            description: "password",
+            default: "",
+            type: "password",
+            userCanEdit: true,
+            adminOnly: false
         }
     ]
 };
