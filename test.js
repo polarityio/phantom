@@ -107,7 +107,7 @@ describe('Polarity Phantom Integration', () => {
         });
     });
 
-    describe('taking action on events', () => {
+    describe('taking action on events', (done) => {
         it('should allow running actions on events', (done) => {
             integration.runPlaybook('1', '1', getOptions(), (err, result) => {
                 assert.isNotOk(err);
@@ -120,6 +120,20 @@ describe('Polarity Phantom Integration', () => {
             integration.runPlaybook('2', '2', getOptions(), (err, result) => {
                 assert.isNotOk(err);
                 assert.equal('failed', result.status);
+                done();
+            });
+        });
+
+        it('should handle errors during container lookup', (done) => {
+            integration.runPlaybook('3', '3', getOptions(), (err, result) => {
+                assert.isOk(err);
+                done();
+            });
+        });
+
+        it('should handle errors during search', (done) => {
+            integration.runPlaybook('4', '4', getOptions(), (err, result) => {
+                assert.isOk(err);
                 done();
             });
         });

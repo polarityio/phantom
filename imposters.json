@@ -277,6 +277,33 @@
           "predicates": [
             {
               "equals": {
+                "path": "/rest/playbook_run",
+                "body": {
+                  "container_id": "4",
+                  "playbook_id": "4",
+                  "scope": "new",
+                  "run": true
+                }
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "statusCode": 500
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
                 "path": "/rest/playbook_run"
               },
               "contains": {
