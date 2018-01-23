@@ -51,7 +51,9 @@ class Containers {
                                 data: {
                                     summary: ['test'],
                                     details: [
-                                        body
+                                        {
+                                            result: body
+                                        }
                                     ]
                                 }
                             });

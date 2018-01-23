@@ -18,6 +18,15 @@ function doLookup(entities, integrationOptions, callback) {
     containers.lookupContainers(entities, (err, results) => {
         Logger.trace({ results: results }, 'Results sent to client');
 
+        results.forEach((result) => {
+            result.data.details.forEach((detail) => {
+                detail.credentials = {
+                    username: integrationOptions.username,
+                    password: integrationOptions.password
+                };
+            });
+        });
+
         callback(err, results);
     });
 }

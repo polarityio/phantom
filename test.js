@@ -28,7 +28,7 @@ describe('Polarity Phantom Integration', () => {
                 } else {
                     assert.isNotEmpty(result, 'got no results back');
                     assert.equal(result.length, 1);
-                    assert.equal(GOOD_IP_1, result[0].data.details[0].tags[0]);
+                    assert.equal(GOOD_IP_1, result[0].data.details[0].result.tags[0]);
                     done();
                 }
             });
@@ -67,7 +67,7 @@ describe('Polarity Phantom Integration', () => {
                 } else {
                     assert.isNotEmpty(result, 'got no results back');
                     assert.equal(result.length, 1);
-                    assert.equal(GOOD_IP_2, result[0].data.details[0].tags[0])
+                    assert.equal(GOOD_IP_2, result[0].data.details[0].result.tags[0])
                     done();
                 }
             });
@@ -80,8 +80,8 @@ describe('Polarity Phantom Integration', () => {
                 } else {
                     assert.isNotEmpty(result, 'got no results back');
                     assert.equal(result.length, 2);
-                    assert.equal(GOOD_IP_1, result[0].data.details[0].tags[0])
-                    assert.equal(GOOD_IP_2, result[1].data.details[0].tags[0])
+                    assert.equal(GOOD_IP_1, result[0].data.details[0].result.tags[0])
+                    assert.equal(GOOD_IP_2, result[1].data.details[0].result.tags[0])
                     done();
                 }
             });
@@ -103,6 +103,21 @@ describe('Polarity Phantom Integration', () => {
                 assert.isOk(err, 'no error was returned');
                 assert.equal(err.message, 'error looking up container 999');
                 done();
+            });
+        });
+
+
+        it('should pass back the credentials in the results', (done) => {
+            integration.doLookup([{ value: GOOD_IP_1 }], getOptions(), (err, result) => {
+                if (err) {
+                    done(err);
+                } else {
+                    assert.isNotEmpty(result, 'got no results back');
+                    assert.equal(result.length, 1);
+                    assert.equal('mocha', result[0].data.details[0].credentials.username);
+                    assert.equal('test', result[0].data.details[0].credentials.password);
+                    done();
+                }
             });
         });
     });
