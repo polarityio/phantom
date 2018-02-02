@@ -35,6 +35,10 @@ function startup(logger) {
     Logger = logger;
 }
 
+/*
+    Currently unused but when polarity supports callbacks from the integration 
+    this can be used to invoke playbooks from the gui.
+*/
 function runPlaybook(containerId, actionId, integrationOptions, callback) {
     let playbooks = new Playbooks(Logger, integrationOptions);
     playbooks.runPlaybookAgainstContainer(actionId, containerId, (err, resp) => {

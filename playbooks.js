@@ -28,7 +28,7 @@ class Playbooks {
             }
 
             let id = body.playbook_run_id;
-            let status = 'running'; // default status for playbook action
+            let status = 'running'; // initial status for playbook action
 
             async.whilst(
                 () => { return status === 'running' },
