@@ -7,7 +7,11 @@ function getRequestOptions(options) {
         auth: {
             username: options.username,
             password: options.password
-        }
+        },
+        ca: options.ca,
+        proxy: config.proxy,
+        cert: options.cert,
+        passphrase: options.passphrase
     };
 }
 
