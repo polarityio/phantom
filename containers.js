@@ -31,6 +31,11 @@ class Containers {
                         return;
                     }
 
+                    if (resp.statusCode !== 200) {
+                        this.logger.error({response: resp}, 'Error looking up entities');
+                        callback(new Error('request failure'));
+                    }
+
                     let id = body.results[0].id
 
                     requestOptions = ro.getRequestOptions(this.integrationOptions);

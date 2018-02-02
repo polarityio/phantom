@@ -22,7 +22,7 @@ module.exports = {
      * @type String
      * @optional
      */
-    description: "TODO phantom integration description",
+    description: "Phantom polarity integration",
     entityTypes: ['IPv4'],
     /**
      * An array of style files (css or less) that will be included for your integration. Any styles specified in
@@ -106,18 +106,9 @@ module.exports = {
             adminOnly: true
         },
         {
-            key: "username",
-            name: "Username",
-            description: "username",
-            default: "",
-            type: "text",
-            userCanEdit: true,
-            adminOnly: false
-        },
-        {
-            key: "password",
-            name: "Password",
-            description: "password",
+            key: "token",
+            name: "Phantom API Token",
+            description: "Phantom API Token",
             default: "",
             type: "password",
             userCanEdit: true,

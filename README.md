@@ -1,8 +1,8 @@
-# Polarity phantom Integration
+# Polarity Phantom Integration
 
 ![image](https://img.shields.io/badge/status-beta-green.svg)
 
-## phantom Integration Options
+## Phantom Integration Options
 
 ### Option 1
 

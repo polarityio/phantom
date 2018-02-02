@@ -6,12 +6,8 @@ module.exports = {
             errors.push({ key: 'host', message: 'a valid hostname is required' });
         }
 
-        if (!options.username) {
-            errors.push({ key: 'username', message: 'a valid username is required' });
-        }
-
-        if (!options.password) {
-            errors.push({ key: 'password', message: 'a valid password is required' });
+        if (!options.token) {
+            errors.push({ key: 'token', message: 'a valid token is required' });
         }
 
         callback(null, errors);

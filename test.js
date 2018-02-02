@@ -174,19 +174,14 @@ describe('Polarity Phantom Integration', () => {
             checkRequire('host', done);
         });
 
-        it('should require a username', (done) => {
-            checkRequire('username', done);
-        });
-
-        it('should require a password', (done) => {
-            checkRequire('password', done);
+        it('should require a token', (done) => {
+            checkRequire('token', done);
         });
 
         it('should pass when all values are provided', (done) => {
             integration.validateOptions({
                 host: 'http://localhost:8080/',
-                username: 'mocha',
-                password: 'test'
+                token: 'mocha'
             }, (_, errors) => {
                 assert.isEmpty(errors);
                 done();

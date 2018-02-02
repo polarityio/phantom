@@ -3,17 +3,17 @@
     <div class="item">
         <p>
             Name:
-            <b>{{detail.name}}</b>
+            <b>{{detail.result.name}}</b>
         </p>
         <p>
             Status:
-            <b>{{detail.status}}</b>
+            <b>{{detail.result.status}}</b>
         </p>
         <h5>
             <i class="bts bt-fw bt-info-circle h5"></i> Description
         </h5>
         <p>
-            <i>{{detail.description}}</i>
+            <i>{{detail.result.description}}</i>
         </p>
         <h5>
             <i class="bts bt-fw bt-info-circle h5"></i> Info
@@ -23,18 +23,18 @@
         </p>
         <p>
             Severity:
-            <b>{{detail.severity}}</b>
+            <b>{{detail.result.severity}}</b>
         </p>
         <p>
             Sensitivity:
             <b>
-                {{detail.sensitivity}}
+                {{detail.result.sensitivity}}
             </b>
         </p>
         <p>
             Label:
             <b>
-                {{detail.label}}
+                {{detail.result.label}}
             </b>
         </p>
 
@@ -43,7 +43,7 @@
         </h5>
 
         <ul>
-            {{#each detail.tags as |tag|}}
+            {{#each detail.result.tags as |tag|}}
             <li>
                 {{tag}}
             </li>

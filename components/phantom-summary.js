@@ -5,9 +5,9 @@ polarity.export = PolarityComponent.extend({
 
         return details.reduce(function (array, next) {
             return array.concat([
-                next.severity,
-                next.sensitivity
-            ].concat(next.tags));
+                next.result.severity,
+                next.result.sensitivity
+            ].concat(next.result.tags));
         }, []);
     })
 });
