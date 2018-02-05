@@ -23,7 +23,7 @@ module.exports = {
      * @optional
      */
     description: "Phantom provides automation and security orchestration capabilities.",
-    entityTypes: ['IPv4', 'IPv6', 'url', 'hash', 'domain', 'email'],
+    entityTypes: ['IPv4', 'hash', 'domain', 'email'],
     /**
      * An array of style files (css or less) that will be included for your integration. Any styles specified in
      * the below files can be used in your custom template.
