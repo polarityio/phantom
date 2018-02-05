@@ -5,10 +5,10 @@ function getRequestOptions(options) {
         strictSSL: config.request.rejectUnauthorized,
         json: true,
         headers: { 'ph-auth-token': options.token },
-        ca: options.ca,
-        proxy: config.proxy,
-        cert: options.cert,
-        passphrase: options.passphrase
+        ca: config.request.ca,
+        proxy: config.request.proxy,
+        cert: config.request.cert,
+        passphrase: config.request.passphrase
     };
 }
 
