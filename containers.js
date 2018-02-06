@@ -36,7 +36,8 @@ class Containers {
                         callback(new Error('request failure'));
                     }
 
-                    let id = body.results[0].id
+                    let id = body.results[0].id;
+                    let link = body.results[0].url;
 
                     requestOptions = ro.getRequestOptions(this.integrationOptions);
                     requestOptions.url = this.integrationOptions.host + '/rest/container/' + id;
@@ -57,7 +58,8 @@ class Containers {
                                     summary: ['test'],
                                     details: [
                                         {
-                                            result: body
+                                            result: body,
+                                            link: link
                                         }
                                     ]
                                 }
