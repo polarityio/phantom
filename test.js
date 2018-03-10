@@ -10,6 +10,7 @@ const GOOD_IP_1 = '111.111.111.111';
 const GOOD_IP_2 = '222.222.222.222';
 const MISSING_IP = '999.999.999.999';
 const MISSING_CONTAINER_IP = '123.123.123.123';
+const _404_IP = '333.333.333.333';
 
 describe('Polarity Phantom Integration', () => {
     function getOptions() {
@@ -116,6 +117,19 @@ describe('Polarity Phantom Integration', () => {
                     assert.equal(result.length, 1);
                     assert.equal('mocha', result[0].data.details[0].credentials.username);
                     assert.equal('test', result[0].data.details[0].credentials.password);
+                    done();
+                }
+            });
+        });
+
+        it('should return null when a 404 is encountered', (done) => {
+            integration.doLookup([{ value: _404_IP }], getOptions(), (err, result) => {
+                if (err) {
+                    done(err);
+                } else {
+                    assert.isNotEmpty(result);
+                    assert.isOk(result[0].entity);
+                    assert.isNotOk(result[0].data);
                     done();
                 }
             });

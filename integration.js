@@ -19,12 +19,14 @@ function doLookup(entities, integrationOptions, callback) {
         Logger.trace({ results: results }, 'Results sent to client');
 
         results.forEach((result) => {
-            result.data.details.forEach((detail) => {
-                detail.credentials = {
-                    username: integrationOptions.username,
-                    password: integrationOptions.password
-                };
-            });
+            if (result && result.data && result.data.details) {
+                result.data.details.forEach((detail) => {
+                    detail.credentials = {
+                        username: integrationOptions.username,
+                        password: integrationOptions.password
+                    };
+                });
+            }
         });
 
         callback(err, results);

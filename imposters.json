@@ -81,6 +81,46 @@
               "equals": {
                 "path": "/rest/search",
                 "query": {
+                  "query": "333.333.333.333",
+                  "categories": "container"
+                }
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "body": {
+                  "count": 1,
+                  "num_pages": 1,
+                  "results": [
+                    {
+                      "url": "https://localhost/mission/333/",
+                      "category": "container",
+                      "verbose": "Container",
+                      "match": {
+                        "tags": "<b>333.333.333.333</b>"
+                      },
+                      "id": "333"
+                    }
+                  ],
+                  "page": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/search",
+                "query": {
                   "query": "111.111.111.111",
                   "categories": "container"
                 }
@@ -420,6 +460,27 @@
                   "update_time": "2016-01-15T22:16:00.813027Z",
                   "version": 1
                 }
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/container/333"
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "statusCode": 404
               }
             }
           ]

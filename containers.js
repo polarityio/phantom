@@ -32,7 +32,7 @@ class Containers {
                     }
 
                     if (resp.statusCode !== 200) {
-                        this.logger.error({response: resp}, 'Error looking up entities');
+                        this.logger.error({ response: resp }, 'Error looking up entities');
                         callback(new Error('request failure'));
                     }
 
@@ -45,9 +45,19 @@ class Containers {
                     request(requestOptions,
                         (err, resp, body) => {
                             if (!resp || resp.statusCode !== 200) {
-                                this.logger.error({ error: err, id: id, body: body }, 'error looking up container with id ' + id);
-                                callback(new Error('error looking up container ' + id));
-                                return;
+                                if (resp.statusCode == 404) {
+                                    this.logger.info({ entity: entity }, 'Entity not in Phantom');
+                                    results.push({
+                                        entity: entity,
+                                        data: null
+                                    });
+                                    callback();
+                                    return;
+                                } else {
+                                    this.logger.error({ error: err, id: id, body: body }, 'error looking up container with id ' + id);
+                                    callback(new Error('error looking up container ' + id));
+                                    return;
+                                }
                             }
 
                             this.logger.trace({ body: body }, 'Adding response to result array');
