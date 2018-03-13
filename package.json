@@ -1,0 +1,26 @@
+{
+  "main": "./integration.js",
+  "name": "phantom",
+  "version": "1.0.0-beta",
+  "private": true,
+  "license": "MIT",
+  "author": "Polarity",
+  "dependencies": {
+    "request": "^2.75",
+    "async": "2.1.4"
+  },
+  "devDependencies": {
+    "bunyan": "^1.8.12",
+    "chai": "^4.1.2",
+    "mocha": "~3.2",
+    "mountebank": "^1.13.0",
+    "node-ssh": "^5.0.0",
+    "node-watch": "^0.5.5",
+    "scp2": "^0.5.0"
+  },
+  "scripts": {
+    "pretest": "mb start --configfile imposters.json &",
+    "test": "mocha --recursive && mb stop || mb stop",
+    "dev": "./sync.js"
+  }
+}

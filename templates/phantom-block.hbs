@@ -1,0 +1,55 @@
+<div class="details-container">
+    {{#each details as |detail|}}
+    <div class="item">
+        <p>
+            Name:
+            <b>{{detail.result.name}}</b>
+        </p>
+        <p>
+            Status:
+            <b>{{detail.result.status}}</b>
+        </p>
+        <a href="{{detail.link}}">View in Phantom</a>
+        <h5>
+            <i class="bts bt-fw bt-info-circle h5"></i> Description
+        </h5>
+        <p>
+            <i>{{detail.result.description}}</i>
+        </p>
+        <h5>
+            <i class="bts bt-fw bt-info-circle h5"></i> Info
+        </h5>
+        <p>
+
+        </p>
+        <p>
+            Severity:
+            <b>{{detail.result.severity}}</b>
+        </p>
+        <p>
+            Sensitivity:
+            <b>
+                {{detail.result.sensitivity}}
+            </b>
+        </p>
+        <p>
+            Label:
+            <b>
+                {{detail.result.label}}
+            </b>
+        </p>
+
+        <h5>
+            <i class="bts bt-fw bt-info-circle h5"></i> Tags
+        </h5>
+
+        <ul>
+            {{#each detail.result.tags as |tag|}}
+            <li>
+                {{tag}}
+            </li>
+            {{/each}}
+        </ul>
+    </div>
+    {{/each}}
+</div>

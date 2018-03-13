@@ -1,0 +1,500 @@
+{
+  "imposters": [
+    {
+      "port": 5555,
+      "protocol": "https",
+      "name": "origin",
+      "stubs": [
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/search",
+                "query": {
+                  "query": "999.999.999.999",
+                  "categories": "container"
+                }
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "body": {
+                  "count": 0,
+                  "num_pages": 1,
+                  "results": [],
+                  "page": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/search",
+                "query": {
+                  "query": "123.123.123.123",
+                  "categories": "container"
+                }
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "body": {
+                  "count": 1,
+                  "num_pages": 1,
+                  "results": [
+                    {
+                      "url": "https://localhost/mission/999/",
+                      "category": "container",
+                      "verbose": "Container",
+                      "match": {
+                        "tags": "<b>172.217.15.110</b>"
+                      },
+                      "id": "999"
+                    }
+                  ],
+                  "page": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/search",
+                "query": {
+                  "query": "333.333.333.333",
+                  "categories": "container"
+                }
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "body": {
+                  "count": 1,
+                  "num_pages": 1,
+                  "results": [
+                    {
+                      "url": "https://localhost/mission/333/",
+                      "category": "container",
+                      "verbose": "Container",
+                      "match": {
+                        "tags": "<b>333.333.333.333</b>"
+                      },
+                      "id": "333"
+                    }
+                  ],
+                  "page": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/search",
+                "query": {
+                  "query": "111.111.111.111",
+                  "categories": "container"
+                }
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "body": {
+                  "count": 1,
+                  "num_pages": 1,
+                  "results": [
+                    {
+                      "url": "https://localhost/mission/1/",
+                      "category": "container",
+                      "verbose": "Container",
+                      "match": {
+                        "tags": "<b>172.217.15.110</b>"
+                      },
+                      "id": "1"
+                    }
+                  ],
+                  "page": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/container/1"
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "body": {
+                  "in_case": false,
+                  "closing_rule_run": null,
+                  "sensitivity": "amber",
+                  "closing_owner": null,
+                  "create_time": "2018-01-11T14:10:05.801332Z",
+                  "owner": 1,
+                  "id": 1,
+                  "ingest_app": null,
+                  "close_time": null,
+                  "open_time": null,
+                  "current_phase": null,
+                  "container_type": "default",
+                  "label": "events",
+                  "due_time": "2018-01-11T15:09:00.000000Z",
+                  "version": 1,
+                  "asset": null,
+                  "status": "new",
+                  "owner_name": null,
+                  "hash": "b342fcaf2ef003c7cc2b77c6434730a7",
+                  "description": "This is a bad event, something really bad happened, and its bad.  Fix all the security.",
+                  "tags": [
+                    "111.111.111.111",
+                    "security_breach",
+                    "eventy_boi",
+                    "bad_event"
+                  ],
+                  "start_time": "2018-01-11T14:10:05.804051Z",
+                  "kill_chain": null,
+                  "artifact_update_time": "2018-01-11T14:10:05.801306Z",
+                  "artifact_count": 0,
+                  "data": {},
+                  "custom_fields": {},
+                  "severity": "high",
+                  "name": "Nathan test event",
+                  "source_data_identifier": "5c72b4b5-e4a2-411a-9136-c05e8ae69a86",
+                  "end_time": null,
+                  "container_update_time": "2018-01-13T22:11:24.248863Z"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/search",
+                "query": {
+                  "query": "222.222.222.222",
+                  "categories": "container"
+                }
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "body": {
+                  "count": 1,
+                  "num_pages": 1,
+                  "results": [
+                    {
+                      "url": "https://localhost/mission/2/",
+                      "category": "container",
+                      "verbose": "Container",
+                      "match": {
+                        "tags": "<b>172.217.15.110</b>"
+                      },
+                      "id": "2"
+                    }
+                  ],
+                  "page": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/container/2"
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "body": {
+                  "in_case": false,
+                  "closing_rule_run": null,
+                  "sensitivity": "amber",
+                  "closing_owner": null,
+                  "create_time": "2018-01-11T14:10:05.801332Z",
+                  "owner": 1,
+                  "id": 2,
+                  "ingest_app": null,
+                  "close_time": null,
+                  "open_time": null,
+                  "current_phase": null,
+                  "container_type": "default",
+                  "label": "events",
+                  "due_time": "2018-01-11T15:09:00.000000Z",
+                  "version": 1,
+                  "asset": null,
+                  "status": "new",
+                  "owner_name": null,
+                  "hash": "b342fcaf2ef003c7cc2b77c6434730a7",
+                  "description": "This is a bad event, something really bad happened, and its bad.  Fix all the security.",
+                  "tags": [
+                    "222.222.222.222",
+                    "security_breach",
+                    "eventy_boi",
+                    "bad_event"
+                  ],
+                  "start_time": "2018-01-11T14:10:05.804051Z",
+                  "kill_chain": null,
+                  "artifact_update_time": "2018-01-11T14:10:05.801306Z",
+                  "artifact_count": 0,
+                  "data": {},
+                  "custom_fields": {},
+                  "severity": "high",
+                  "name": "Nathan test event",
+                  "source_data_identifier": "5c72b4b5-e4a2-411a-9136-c05e8ae69a86",
+                  "end_time": null,
+                  "container_update_time": "2018-01-13T22:11:24.248863Z"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/playbook_run",
+                "body": {
+                  "container_id": "4",
+                  "playbook_id": "4",
+                  "scope": "new",
+                  "run": true
+                }
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "statusCode": 500
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/playbook_run"
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "body": {
+                  "playbook_run_id": "${ID}"
+                }
+              },
+              "_behaviors": {
+                "copy": [
+                  {
+                    "from": "body",
+                    "into": "${ID}",
+                    "using": {
+                      "method": "jsonpath",
+                      "selector": "$.playbook_id"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/playbook_run/1"
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "body": {
+                  "status": "running"
+                }
+              }
+            },
+            {
+              "is": {
+                "body": {
+                  "action_exec": [],
+                  "cancelled": "",
+                  "container": 1,
+                  "id": 1,
+                  "last_artifact": 160,
+                  "log_level": 1,
+                  "message": "{\"message\":\"\",\"playbook_run_id\":46,\"result\":[{\"action\":\"whois ip\",\"app_runs\":[{\"action\":\"whois ip\",\"action_run_id\":46,\"app_message\":\"Registry: arin\\nASN: 8075\\nCountry: US\\nNets:\\nRange: 134.170.0.0 - 134.170.255.255\\nAddress: One Microsoft Way\",\"app_name\":\"WHOIS\",\"app_run_id\":55,\"asset_name\":\"whois\",\"parameter\":\"{\\\"ip\\\": \\\"134.170.188.221\\\"}\",\"per_parameter_status\":\"success\"}],\"close_time\":\"2016-01-15T22:15:58.05319+00:00\",\"create_time\":\"2016-01-15T22:15:55.252+00:00\",\"id\":46,\"message\":\"1 actions succeeded\",\"status\":\"success\",\"type\":\"investigate\"},{\"action\":\"whois domain\",\"app_runs\":[{\"action\":\"whois domain\",\"action_run_id\":47,\"app_message\":\"Organization: Amazon Technologies, Inc.\\nDomain: amazon.com\\nCity: Reno\\nName: Hostmaster, Amazon Legal Dept.\\nCountry: US\",\"app_name\":\"WHOIS\",\"app_run_id\":56,\"asset_name\":\"whois\",\"parameter\":\"{\\\"domain\\\": \\\"amazon.com\\\"}\",\"per_parameter_status\":\"success\"}],\"close_time\":\"2016-01-15T22:16:00.798179+00:00\",\"create_time\":\"2016-01-15T22:15:58.062+00:00\",\"id\":47,\"message\":\"1 actions succeeded\",\"status\":\"success\",\"type\":\"investigate\"}],\"status\":\"success\"}\n",
+                  "owner": 4,
+                  "playbook": 42,
+                  "start_time": "2016-01-15T22:15:55.171000Z",
+                  "status": "success",
+                  "test_mode": false,
+                  "update_time": "2016-01-15T22:16:00.813027Z",
+                  "version": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/playbook_run/2"
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "body": {
+                  "status": "running"
+                }
+              }
+            },
+            {
+              "is": {
+                "body": {
+                  "action_exec": [],
+                  "cancelled": "",
+                  "container": 2,
+                  "id": 2,
+                  "last_artifact": 160,
+                  "log_level": 1,
+                  "message": "{\"message\":\"\",\"playbook_run_id\":46,\"result\":[{\"action\":\"whois ip\",\"app_runs\":[{\"action\":\"whois ip\",\"action_run_id\":46,\"app_message\":\"Registry: arin\\nASN: 8075\\nCountry: US\\nNets:\\nRange: 134.170.0.0 - 134.170.255.255\\nAddress: One Microsoft Way\",\"app_name\":\"WHOIS\",\"app_run_id\":55,\"asset_name\":\"whois\",\"parameter\":\"{\\\"ip\\\": \\\"134.170.188.221\\\"}\",\"per_parameter_status\":\"success\"}],\"close_time\":\"2016-01-15T22:15:58.05319+00:00\",\"create_time\":\"2016-01-15T22:15:55.252+00:00\",\"id\":46,\"message\":\"1 actions succeeded\",\"status\":\"success\",\"type\":\"investigate\"},{\"action\":\"whois domain\",\"app_runs\":[{\"action\":\"whois domain\",\"action_run_id\":47,\"app_message\":\"Organization: Amazon Technologies, Inc.\\nDomain: amazon.com\\nCity: Reno\\nName: Hostmaster, Amazon Legal Dept.\\nCountry: US\",\"app_name\":\"WHOIS\",\"app_run_id\":56,\"asset_name\":\"whois\",\"parameter\":\"{\\\"domain\\\": \\\"amazon.com\\\"}\",\"per_parameter_status\":\"success\"}],\"close_time\":\"2016-01-15T22:16:00.798179+00:00\",\"create_time\":\"2016-01-15T22:15:58.062+00:00\",\"id\":47,\"message\":\"1 actions succeeded\",\"status\":\"success\",\"type\":\"investigate\"}],\"status\":\"success\"}\n",
+                  "owner": 4,
+                  "playbook": 42,
+                  "start_time": "2016-01-15T22:15:55.171000Z",
+                  "status": "failed",
+                  "test_mode": false,
+                  "update_time": "2016-01-15T22:16:00.813027Z",
+                  "version": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "predicates": [
+            {
+              "equals": {
+                "path": "/rest/container/333"
+              },
+              "contains": {
+                "headers": {
+                  "Authorization": "Basic bW9jaGE6dGVzdA=="
+                }
+              }
+            }
+          ],
+          "responses": [
+            {
+              "is": {
+                "statusCode": 404
+              }
+            }
+          ]
+        },
+        {
+          "responses": [
+            {
+              "is": {
+                "statusCode": 500
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
