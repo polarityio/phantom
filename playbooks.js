@@ -1,27 +1,28 @@
 let request = require('request');
 let async = require('async');
-let ro = require('./request-options');
 
 class Playbooks {
-    constructor(logger, options) {
+    constructor(logger, requestWithDefaults, options) {
         this.options = options;
         this.logger = logger;
+        this.requestWithDefaults = requestWithDefaults;
     }
 
     runPlaybookAgainstContainer(playbookId, containerId, callback) {
-        let requestOptions = ro.getRequestOptions(this.options);
-        requestOptions.url = this.options.host + '/rest/playbook_run';
-        requestOptions.method = 'POST';
-        requestOptions.body = {
-            "container_id": containerId,
-            "playbook_id": playbookId,
-            "scope": "new",
-            "run": true
+        let requestOptions = {
+            url: this.options.host + '/rest/playbook_run',
+            method: 'POST',
+            body: {
+                "container_id": containerId,
+                "playbook_id": playbookId,
+                "scope": "new",
+                "run": true
+            }
         };
 
-        request(requestOptions, (err, resp, body) => {
+        this.requestWithDefaults(requestOptions, (err, resp, body) => {
             if (err || resp.statusCode !== 200) {
-                this.logger.error({ err: err, statusCode: resp ? resp.statusCode : null }, 'Error during search');
+                this.logger.error({err: err, statusCode: resp ? resp.statusCode : null}, 'Error during search');
                 err = err || new Error('service returned non-200 status code during search: ' + resp.statusCode);
                 callback(err, null);
                 return;
@@ -30,17 +31,22 @@ class Playbooks {
             let id = body.playbook_run_id;
             let status = 'running'; // initial status for playbook action
 
-            async.whilst(
-                () => { return status === 'running' },
-                (callback) => {
-                    requestOptions = ro.getRequestOptions(this.options);
-                    requestOptions.url = this.options.host + '/rest/playbook_run/' + id;
+            async.whilst(() => {
+                    return status === 'running'
+                }, (callback) => {
 
-                    request(requestOptions, (err, resp, body) => {
-                        this.logger.trace({ err: err, body: body }, 'Polling playbook run status');
+                    let requestOptions = {
+                        url: this.options.host + '/rest/playbook_run/' + id
+                    };
+
+                    this.requestWithDefaults(requestOptions, (err, resp, body) => {
+                        this.logger.trace({err: err, body: body}, 'Polling playbook run status');
 
                         if (err || resp.statusCode !== 200) {
-                            this.logger.error({ err: err, statusCode: resp ? resp.statusCode : null }, 'Error during container lookup');
+                            this.logger.error({
+                                err: err,
+                                statusCode: resp ? resp.statusCode : null
+                            }, 'Error while running playbook');
                             err = err || new Error('service returned non-200 status code: ' + resp.statusCode);
                             callback(err, null);
                             return;
@@ -54,6 +60,6 @@ class Playbooks {
             );
         });
     }
-
 }
+
 module.exports = Playbooks;

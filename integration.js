@@ -1,40 +1,58 @@
 let async = require('async');
 let request = require('request');
-var qs = require('querystring');
 let Playbooks = require('./playbooks');
 let Containers = require('./containers');
 let config = require('./config/config');
 let url = require('url');
-let ro = require('./request-options');
 let validator = require('./validator');
+let fs = require('fs');
+let requestWithDefaults;
 
 let Logger;
 
 function doLookup(entities, integrationOptions, callback) {
     Logger.trace({ entities: entities, options: integrationOptions }, 'Entities received by integration');
 
-    let containers = new Containers(Logger, integrationOptions);
+    let containers = new Containers(Logger, requestWithDefaults, integrationOptions);
 
     containers.lookupContainers(entities, (err, results) => {
         Logger.trace({ results: results }, 'Results sent to client');
-
-        results.forEach((result) => {
-            if (result && result.data && result.data.details) {
-                result.data.details.forEach((detail) => {
-                    detail.credentials = {
-                        username: integrationOptions.username,
-                        password: integrationOptions.password
-                    };
-                });
-            }
-        });
-
         callback(err, results);
     });
 }
 
 function startup(logger) {
     Logger = logger;
+
+    let defaults = {};
+
+    if (typeof config.request.cert === 'string' && config.request.cert.length > 0) {
+        defaults.cert = fs.readFileSync(config.request.cert);
+    }
+
+    if (typeof config.request.key === 'string' && config.request.key.length > 0) {
+        defaults.key = fs.readFileSync(config.request.key);
+    }
+
+    if (typeof config.request.passphrase === 'string' && config.request.passphrase.length > 0) {
+        defaults.passphrase = config.request.passphrase;
+    }
+
+    if (typeof config.request.ca === 'string' && config.request.ca.length > 0) {
+        defaults.ca = fs.readFileSync(config.request.ca);
+    }
+
+    if (typeof config.request.proxy === 'string' && config.request.proxy.length > 0) {
+        defaults.proxy = config.request.proxy;
+    }
+
+    if (typeof config.request.rejectUnauthorized === 'boolean') {
+        defaults.rejectUnauthorized = config.request.rejectUnauthorized;
+    }
+
+    defaults.json = true;
+
+    requestWithDefaults = request.defaults(defaults);
 }
 
 /*
