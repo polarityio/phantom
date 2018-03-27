@@ -98,8 +98,8 @@ module.exports = {
     options: [
         {
             key: "host",
-            name: "Server",
-            description: "The hostname of the Phantom server.",
+            name: "Server URL",
+            description: "The URL of the Phantom server including the schema (e.g., https://my-phantom.corp)",
             default: "",
             type: "text",
             userCanEdit: false,
