@@ -1,53 +1,82 @@
 let request = require('request');
 let async = require('async');
+let ro = require('./request-options');
+let errorHandler = require('./error-handler');
 
 class Playbooks {
-    constructor(logger, requestWithDefaults, options) {
+    constructor(logger, options) {
         this.options = options;
         this.logger = logger;
-        this.requestWithDefaults = requestWithDefaults;
+        this.requestWithDefaults = errorHandler(request.defaults(ro.getRequestOptions(this.options)));
+    }
+
+    listPlaybooks(callback) {
+        this.requestWithDefaults({
+            url: `${this.options.host}/rest/playbook`,
+            qs: {
+                _filter_labels__contains: "'events'", // TODO update this if you add more event types
+                _exclude_category: "'deprecated'"
+            },
+            method: 'GET'
+        }, 200, (err, body) => {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            callback(null, body);
+        });
+    }
+
+    // will try to convert to a number otherwise will return the value passed in
+    safeToInt(value) {
+        if (typeof value === 'number') {
+            return value;
+        }
+
+        let parsed = parseInt(value);
+        if (isNaN(parsed)) {
+            this.logger.error({ value: value }, 'could not convert value to int');
+            return value;
+        }
+
+        return parsed;
     }
 
     runPlaybookAgainstContainer(playbookId, containerId, callback) {
-        let requestOptions = {
-            url: this.options.host + '/rest/playbook_run',
-            method: 'POST',
-            body: {
-                "container_id": containerId,
-                "playbook_id": playbookId,
-                "scope": "new",
-                "run": true
-            }
-        };
+        this.logger.info(`Running playbook id ${playbookId} against container ${containerId}`);
 
-        this.requestWithDefaults(requestOptions, (err, resp, body) => {
-            if (err || resp.statusCode !== 200) {
-                this.logger.error({err: err, statusCode: resp ? resp.statusCode : null}, 'Error during search');
-                err = err || new Error('service returned non-200 status code during search: ' + resp.statusCode);
-                callback(err, null);
+        let requestOptions = {};
+        requestOptions.url = this.options.host + '/rest/playbook_run';
+        requestOptions.method = 'POST';
+        requestOptions.body = {
+            "container_id": this.safeToInt(containerId),
+            "playbook_id": this.safeToInt(playbookId),
+            "scope": "new",
+            "run": true
+        };
+        requestOptions.json = true;
+
+        this.requestWithDefaults(requestOptions, 200, (err, body) => {
+            if (err) {
+                this.logger.error({ error: err, body: body }, 'Got error while trying to run playbook')
+                callback(err);
                 return;
             }
 
             let id = body.playbook_run_id;
             let status = 'running'; // initial status for playbook action
 
-            async.whilst(() => {
-                    return status === 'running'
-                }, (callback) => {
+            async.whilst(
+                () => { return status === 'running' },
+                (callback) => {
+                    requestOptions = ro.getRequestOptions(this.options);
+                    requestOptions.url = this.options.host + '/rest/playbook_run/' + id;
 
-                    let requestOptions = {
-                        url: this.options.host + '/rest/playbook_run/' + id
-                    };
+                    this.requestWithDefaults(requestOptions, 200, (err, body) => {
+                        this.logger.trace({ err: err, body: body }, 'Polling playbook run status');
 
-                    this.requestWithDefaults(requestOptions, (err, resp, body) => {
-                        this.logger.trace({err: err, body: body}, 'Polling playbook run status');
-
-                        if (err || resp.statusCode !== 200) {
-                            this.logger.error({
-                                err: err,
-                                statusCode: resp ? resp.statusCode : null
-                            }, 'Error while running playbook');
-                            err = err || new Error('service returned non-200 status code: ' + resp.statusCode);
+                        if (err) {
                             callback(err, null);
                             return;
                         }
@@ -56,7 +85,17 @@ class Playbooks {
                         callback(err, body);
                     });
                 },
-                callback
+                (err, body) => {
+                    if (err) {
+                        callback(err, body);
+                    }
+
+                    if (status == 'failed') {
+                        callback({ error: 'status was failed' }, body);
+                    }
+
+                    callback(null, body);
+                }
             );
         });
     }

@@ -138,7 +138,7 @@ describe('Polarity Phantom Integration', () => {
 
     describe('taking action on events', (done) => {
         it('should allow running actions on events', (done) => {
-            integration.runPlaybook('1', '1', getOptions(), (err, result) => {
+            integration.onMessage({ containerId: '1', actionId: '1' }, getOptions(), (err, result) => {
                 assert.isNotOk(err);
                 assert.equal('success', result.status);
                 done();
@@ -146,7 +146,7 @@ describe('Polarity Phantom Integration', () => {
         });
 
         it('should report failure', (done) => {
-            integration.runPlaybook('2', '2', getOptions(), (err, result) => {
+            integration.onMessage({ containerId: '2', actionId: '2' }, getOptions(), (err, result) => {
                 assert.isNotOk(err);
                 assert.equal('failed', result.status);
                 done();
@@ -154,14 +154,14 @@ describe('Polarity Phantom Integration', () => {
         });
 
         it('should handle errors during container lookup', (done) => {
-            integration.runPlaybook('3', '3', getOptions(), (err, result) => {
+            integration.onMessage({ containerId: '3', actionId: '3' }, getOptions(), (err, result) => {
                 assert.isOk(err);
                 done();
             });
         });
 
         it('should handle errors during search', (done) => {
-            integration.runPlaybook('4', '4', getOptions(), (err, result) => {
+            integration.onMessage({ containerId: '4', actionId: '4' }, getOptions(), (err, result) => {
                 assert.isOk(err);
                 done();
             });

@@ -50,14 +50,6 @@ module.exports = {
             file: "./templates/phantom-block.hbs"
         }
     },
-    summary: {
-        component: {
-            file: './components/phantom-summary.js'
-        },
-        template: {
-            file: './templates/phantom-summary.hbs'
-        }
-    },
     request: {
         // Provide the path to your certFile. Leave an empty string to ignore this option.
         cert: '',
@@ -75,7 +67,7 @@ module.exports = {
          * to the servers without valid SSL certificates.  Please note that we do NOT recommending setting this
          * to false in a production environment.
          */
-        rejectUnauthorized: true
+        rejectUnauthorized: false
     },
     logging: {
         // directory is relative to the this integrations directory
@@ -98,8 +90,8 @@ module.exports = {
     options: [
         {
             key: "host",
-            name: "Server URL",
-            description: "The URL of the Phantom server including the schema (e.g., https://my-phantom.corp)",
+            name: "Server",
+            description: "The hostname of the Phantom server.",
             default: "",
             type: "text",
             userCanEdit: false,

@@ -11,13 +11,13 @@
         </p>
         <a href="{{detail.link}}">View in Phantom</a>
         <h5>
-            <i class="fa fa-fw fa-info-circle h5"></i> Description
+            <i class="bts bt-fw bt-info-circle h5"></i> Description
         </h5>
         <p>
             <i>{{detail.result.description}}</i>
         </p>
         <h5>
-            <i class="fa fa-fw fa-info-circle h5"></i> Info
+            <i class="bts bt-fw bt-info-circle h5"></i> Info
         </h5>
         <p>
 
@@ -40,7 +40,7 @@
         </p>
 
         <h5>
-            <i class="fa fa-fw fa-info-circle h5"></i> Tags
+            <i class="bts bt-fw bt-info-circle h5"></i> Tags
         </h5>
 
         <ul>
@@ -50,6 +50,21 @@
             </li>
             {{/each}}
         </ul>
+
+        <h5>
+            <i class="bts bt-fw bt-info-circle h5"></i> Playbooks
+        </h5>
+
+        <div>
+            <select size=3 onchange={{action 'onSelectPlaybook' value="target.value" }}>
+                {{#each detail.playbooks as |playbook|}}
+                <option value="{{playbook.id}}">{{playbook.name}}</option>
+                {{/each}}
+            </select>
+            <button {{action "runPlaybook" detail.result.id }} class="btn material btn-primary">Run</button>
+        </div>
+
+        {{message}}
     </div>
     {{/each}}
 </div>
