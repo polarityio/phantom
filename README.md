@@ -2,11 +2,12 @@
 
 ![image](https://img.shields.io/badge/status-beta-green.svg)
 
-Polarity's Phantom integration allows automated queries against Phantom's container and artifact database.
+Polarity's Phantom integration allows automated queries against Phantom's container and artifact database and allows a user to execute pre-defined playbooks from the Polarity overlay window.
+
+![phantomint](https://user-images.githubusercontent.com/22529325/53601678-a44bf100-3b7a-11e9-9a87-c29970c127c5.gif)
 
 To learn more about Phantom, visit the [official website](https://www.phantom.us).
 
-> Note that this integration is currently in Beta.
 
 ## Phantom Integration Options
 
@@ -25,6 +26,6 @@ Installation instructions for integrations are provided on the [PolarityIO GitHu
 
 ## Polarity
 
-Polarity is a memory-augmentation platform that improves and accelerates analyst decision making.  For more information about the Polarity platform please see: 
+Polarity is a memory-augmentation platform that improves and accelerates analyst decision making.  For more information about the Polarity platform please see:
 
 https://polarity.io/
