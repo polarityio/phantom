@@ -21,6 +21,7 @@ dependency-reduced-pom.xml
 
 # Ignore local log files
 *.log
+*.remote-sync.json
 
 # Ignore Generated HTML README Files
 README.html
@@ -30,4 +31,3 @@ node_modules/
 test-runner.js
 
 .polarity.conf
-
