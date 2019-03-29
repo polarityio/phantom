@@ -1,13 +1,13 @@
 {
   "main": "./integration.js",
   "name": "phantom",
-  "version": "3.0.0-beta",
+  "version": "3.0.1-beta",
   "private": true,
   "license": "MIT",
   "author": "Polarity",
   "dependencies": {
-    "request": "^2.75",
-    "async": "^2.1.4"
+    "request": "^2.88",
+    "async": "^2.6"
   },
   "devDependencies": {
     "bunyan": "^1.8.12",
