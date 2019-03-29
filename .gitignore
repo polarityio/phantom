@@ -23,6 +23,7 @@ dependency-reduced-pom.xml
 *.log
 *.remote-sync.json
 
+
 # Ignore Generated HTML README Files
 README.html
 
