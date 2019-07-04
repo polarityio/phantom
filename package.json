@@ -7,7 +7,8 @@
   "author": "Polarity",
   "dependencies": {
     "request": "^2.88",
-    "async": "^2.6"
+    "async": "^2.6",
+    "snyk": "^1.189.0"
   },
   "devDependencies": {
     "bunyan": "^1.8.12",
@@ -21,6 +22,9 @@
   "scripts": {
     "pretest": "mb start --configfile imposters.json &",
     "test": "mocha --recursive && mb stop || mb stop",
-    "dev": "./sync.js"
-  }
+    "dev": "./sync.js",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
+  },
+  "snyk": true
 }
