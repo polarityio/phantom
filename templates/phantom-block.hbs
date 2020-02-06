@@ -1,70 +1,86 @@
 <div class="details-container">
-    {{#each details as |detail|}}
+  {{#each details as |detail|}}
     <div class="item">
-        <p>
-            Name:
-            <b>{{detail.result.name}}</b>
-        </p>
-        <p>
-            Status:
-            <b>{{detail.result.status}}</b>
-        </p>
-        <a href="{{detail.link}}">View in Phantom</a>
+      <p>
+        Name:
+        <b>{{detail.result.name}}</b>
+      </p>
+      <p>
+        Status:
+        <b>{{detail.result.status}}</b>
+      </p>
+      <div class="view-in-ts">
+        <a class="p-link" href={{detail.link}}>View in Phantom
+          {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+      </div>
+      {{#if detail.result.description}}
         <h5>
-            {{fa-icon "file" fixedWidth=true}} Description
+          {{fa-icon "file" fixedWidth=true}} Description
         </h5>
         <p>
-            <i>{{detail.result.description}}</i>
+          <i>{{detail.result.description}}</i>
         </p>
+      {{/if}}
+
+      <h5>
+        {{fa-icon "info-circle" fixedWidth=true}} Info
+      </h5>
+      <p>
+      </p>
+      <p>
+        Severity:
+        <b>{{detail.result.severity}}</b>
+      </p>
+      <p>
+        Sensitivity:
+        <b>
+          {{detail.result.sensitivity}}
+        </b>
+      </p>
+      <p>
+        Label:
+        <b>
+          {{detail.result.label}}
+        </b>
+      </p>
+
+      {{#if detail.result.tags.length}}
         <h5>
-            {{fa-icon "info-circle" fixedWidth=true}} Info
+          {{fa-icon "info-circle" fixedWidth=true}} Tags
         </h5>
-        <p>
-
-        </p>
-        <p>
-            Severity:
-            <b>{{detail.result.severity}}</b>
-        </p>
-        <p>
-            Sensitivity:
-            <b>
-                {{detail.result.sensitivity}}
-            </b>
-        </p>
-        <p>
-            Label:
-            <b>
-                {{detail.result.label}}
-            </b>
-        </p>
-
-        <h5>
-            {{fa-icon "info-circle" fixedWidth=true}} Tags
-        </h5>
-
         <ul>
-            {{#each detail.result.tags as |tag|}}
+          {{#each detail.result.tags as |tag|}}
             <li>
-                {{tag}}
+              {{tag}}
             </li>
-            {{/each}}
+          {{/each}}
         </ul>
+      {{/if}}
 
-        <h5>
-            {{fa-icon "info-circle" fixedWidth=true}} Playbooks
-        </h5>
+      <h5>
+        {{fa-icon "info-circle" fixedWidth=true}} Playbooks
+      </h5>
 
-        <div>
-            <select size=3 onchange={{action 'onSelectPlaybook' value="target.value" }}>
-                {{#each detail.playbooks as |playbook|}}
-                <option value="{{playbook.id}}">{{playbook.name}}</option>
-                {{/each}}
-            </select>
-            <button {{action "runPlaybook" detail.result.id }} class="btn material btn-primary">Run</button>
+      <div class="runnable-playbooks">
+        <select size=3 onchange={{action 'onSelectPlaybook' value="target.value" }}>
+          {{#each detail.playbooks as |playbook|}}
+            <option value="{{playbook.id}}">{{playbook.name}}</option>
+          {{/each}}
+        </select>
+        <button {{action "runPlaybook" detail.result.id }} class="btn material btn-primary">Run</button>
+      </div>
+      {{#if message.length}}
+        <span class="message">{{message}}</span>
+      {{/if}}
+
+      <h1 class="p-title">Playbook Run History</h1>
+      {{#if detail.ranPlaybooks.length}}        
+        <div class="wrap-container">
+          {{#each detail.ranPlaybooks as |ranPlaybook|}}
+            <span class="playbook-container">{{ranPlaybook}}</span>
+          {{/each}}
         </div>
-
-        {{message}}
+      {{/if}}
     </div>
-    {{/each}}
+  {{/each}}
 </div>
