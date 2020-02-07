@@ -94,10 +94,7 @@ class Containers {
     const requestOptions = ro.getRequestOptions(this.integrationOptions);
     requestOptions.url = this.integrationOptions.host + "/rest/container/" + id;
 
-    this.logger.trace(
-      { options: requestOptions },
-      "Request options for Container Request"
-    );
+    this.logger.trace({ options: requestOptions }, "Request options for Container Request");
 
     request(requestOptions, callback);
   }
@@ -117,7 +114,7 @@ class Containers {
       }
     }
       
-      this.logger.trace({ body }, "Adding response to result array");
+    this.logger.trace({ body }, "Adding response to result array");
 
     this.containers.push({ entity, container: { ...body, link } });
     next();
