@@ -31,10 +31,6 @@ class Playbooks {
   }
 
   getPlaybookRunHistory(containerId, callback) {
-    this.logger.info(
-      `Running playbook id ${playbookId} against container ${containerId}`
-    );
-
     let requestOptions = {};
     requestOptions.url = this.options.host + "/rest/playbook_run";
     requestOptions.qs = {
@@ -63,12 +59,49 @@ class Playbooks {
           playbookName: playbookRunInfo.playbook.split("/").slice(-1)[0],
           status: playbookRunInfo.status
         }
-      });
+      }).reduce(this.getDistinctPlaybookRuns, []);
 
       callback(null, playbooksRan)
     });
   }
 
+  getDistinctPlaybookRuns(agg, playbookRun) {
+    const existingPlaybookRunIndex = 
+      agg.findIndex(({ playbookName }) => playbookName === playbookRun.playbookName);
+    
+    const aggAndReplaceExistingPlaybookRun = () => ([
+      ...agg.slice(0, existingPlaybookRunIndex),
+      {
+        ...agg[existingPlaybookRunIndex],
+        ...(
+          playbookRun.status === "success" ? 
+            { successCount: agg[existingPlaybookRunIndex].successCount + 1 } :
+          playbookRun.status === "failure" ? 
+            { failureCount: agg[existingPlaybookRunIndex].failureCount + 1 } :
+            { pendingCount: agg[existingPlaybookRunIndex].pendingCount + 1 }
+        )
+      },
+      ...agg.slice(existingPlaybookRunIndex + 1)
+    ]);
+    
+    const aggNewPlaybookRun = () => ([
+      ...agg,
+      { 
+        ...playbookRun,
+        successCount: 0, failureCount: 0, pendingCount: 0,
+        ...(
+          playbookRun.status === "success" ? { successCount: 1 } :
+          playbookRun.status === "failure" ? { failureCount: 1 } :
+          { pendingCount: 1 }
+        )
+      }
+    ]);
+
+    return existingPlaybookRunIndex !== -1 ? 
+      aggAndReplaceExistingPlaybookRun() : 
+      aggNewPlaybookRun()
+  }
+  
   // will try to convert to a number otherwise will return the value passed in
   safeToInt(value) {
     if (typeof value === "number") return value;

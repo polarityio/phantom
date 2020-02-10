@@ -1,7 +1,7 @@
-let async = require("async");
-let request = require("request");
-let ro = require("./request-options");
-let Playbooks = require("./playbooks");
+const async = require("async");
+const request = require("request");
+const ro = require("./request-options");
+const Playbooks = require("./playbooks");
 
 class Containers {
   constructor(logger, options) {
@@ -27,12 +27,7 @@ class Containers {
                 result: container,
                 link: container.link,
                 playbooks: playbooks.data,
-                ranPlaybooks: [
-                  "ip_investigate_and_report",
-                  "ip_investigate_and_report",
-                  "ip_investigate_and_report",
-                  "ip_investigate_and_report"
-                ]
+                playbooksRan: container.playbooksRan
               }
             ]
           }
@@ -46,9 +41,10 @@ class Containers {
   _getContainers(entities, callback) {
     async.each(entities, 
       (entity, next) => 
-        this._getContainerSearchResults(entity, (err, resp, body) => 
-          this._getContainerFromSearchResults(entity, err, resp, body, next)
-        ),
+        this._getContainerSearchResults(entity, (err, containerSearchResults) => {
+          if (err) return next(err, null);
+          this._getContainerFromSearchResults(entity, containerSearchResults, next)
+        }),
       (err) => callback(err, this.containers)
     );
   }
@@ -66,28 +62,34 @@ class Containers {
       "Request options for Container Search"
     );
 
-    request(requestOptions, callback);
+    request(requestOptions, (err, resp, body)=>{
+      this.logger.trace({ results: body, error: err, response: resp }, "Results of entity lookup");
+
+      if (!body || !body.results || body.results.length === 0) {
+        this.containers.push({ entity, container: null});
+        return callback();
+      }
+
+      if (resp.statusCode !== 200) {
+        this.logger.error({ response: resp }, "Error looking up entities");
+        return callback({ error: new Error("request failure") });
+      }
+
+      return callback(null, body)
+    });
   }
 
-  _getContainerFromSearchResults(entity, err, resp, body, next) {
-    this.logger.trace({ results: body, error: err, response: resp }, "Results of entity lookup");
+  _getContainerFromSearchResults(entity, containerSearchResults, next) {
+    const id = containerSearchResults.results[0].id;
+    const link = containerSearchResults.results[0].url;
 
-    if (!body || !body.results || body.results.length === 0) {
-      this.containers.push({ entity, container: null});
-      return next();
-    }
-
-    if (resp.statusCode !== 200) {
-      this.logger.error({ response: resp }, "Error looking up entities");
-      return next({ error: new Error("request failure") });
-    }
-
-    let id = body.results[0].id;
-    let link = body.results[0].url;
-
-    this._getContainer(id, (err, resp, body) => 
-      this._formatContainer(entity, link, err, resp, body, next)
-    );
+    this._getContainer(id, (err, container) => {
+      if (err) return next(err, null);
+      this.playbooks.getPlaybookRunHistory(id, (err, playbookRuns) => {
+        if (err) return next(err, null);
+        this._formatContainer(entity, link, container, playbookRuns, next)
+      })
+    });
   }
 
   _getContainer(id, callback) {
@@ -96,27 +98,29 @@ class Containers {
 
     this.logger.trace({ options: requestOptions }, "Request options for Container Request");
 
-    request(requestOptions, callback);
+    request(requestOptions, (err, resp, body) => {
+      if (!resp || resp.statusCode !== 200) {
+        if (resp.statusCode == 404) {
+          this.logger.info({ entity }, "Entity not in Phantom");
+          this.containers.push({ entity, container: null });
+          return callback();
+        } else {
+          this.logger.error(
+            { error: err, id, body },
+            "error looking up container with id " + id
+          );
+          return callback({ error: new Error("error looking up container " + id) });
+        }
+      }
+
+      this.logger.trace({ body }, "Adding response to result array");
+
+      callback(null, body)
+    });
   }
 
-  _formatContainer(entity, link, err, resp, body, next) {
-    if (!resp || resp.statusCode !== 200) {
-      if (resp.statusCode == 404) {
-        this.logger.info({ entity }, "Entity not in Phantom");
-        this.containers.push({ entity, container: null });
-        return next();
-      } else {
-        this.logger.error(
-          { error: err, id, body },
-          "error looking up container with id " + id
-        );
-        return next({ error: new Error("error looking up container " + id) });
-      }
-    }
-      
-    this.logger.trace({ body }, "Adding response to result array");
-
-    this.containers.push({ entity, container: { ...body, link } });
+  _formatContainer(entity, link, container, playbooksRan, next) {
+    this.containers.push({ entity, container: { ...container, link, playbooksRan } });
     next();
   }
 }

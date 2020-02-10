@@ -74,10 +74,23 @@
       {{/if}}
 
       <h1 class="p-title">Playbook Run History</h1>
-      {{#if detail.ranPlaybooks.length}}        
+      {{#if detail.playbooksRan.length}}        
         <div class="wrap-container">
-          {{#each detail.ranPlaybooks as |ranPlaybook|}}
-            <span class="playbook-container">{{ranPlaybook}}</span>
+          {{#each detail.playbooksRan as |playbookRun|}}
+            <span class="playbook-container">
+              {{playbookRun.playbookName}} (
+              {{#if (gt playbookRun.successCount 0)}}
+                <span style="color: green; font-weight: 500;">Succ {{playbookRun.successCount}}</span>
+                {{if (or (gt playbookRun.pendingCount 0) (gt playbookRun.failureCount 0)) ","}}
+              {{/if}}
+              {{#if (gt playbookRun.pendingCount 0)}}
+                <span style="color: orange; font-weight: 500;">Pend {{playbookRun.pendingCount}}</span>
+                {{if (gt playbookRun.failureCount 0) ","}}
+              {{/if}}
+              {{#if (gt playbookRun.failureCount 0)}}
+                <span style="color: red; font-weight: 500;">Fail {{playbookRun.failureCount}}</span>
+              {{/if}})
+            </span>
           {{/each}}
         </div>
       {{/if}}
