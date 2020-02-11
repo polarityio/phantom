@@ -20,17 +20,22 @@ class Containers {
 
         const lookupResults = containers.map(({ entity, container }) => ({
           entity,
-          data: {
-            summary: [container.severity, container.sensitivity].concat(container.tags),
-            details: [
-              {
-                result: container,
-                link: container.link,
-                playbooks: playbooks.data,
-                playbooksRan: container.playbooksRan
+          data: 
+            container 
+              ? {
+                summary: [container.severity, container.sensitivity].concat(container.tags),
+                details: [{
+                    result: container,
+                    link: container.link,
+                    playbooks: playbooks.data,
+                    playbooksRan: container.playbooksRan
+                  }
+                ],
+                onDemand: entity.requestContext.requestType === "OnDemand"
               }
-            ]
-          }
+            : entity.requestContext.requestType === "OnDemand" 
+              ? { onDemand: true, entity } 
+              : null
         }));
 
         callback(null, lookupResults);
@@ -80,6 +85,7 @@ class Containers {
   }
 
   _getContainerFromSearchResults(entity, containerSearchResults, next) {
+    //TODO: Change this to be able to show all results and not just the first
     const id = containerSearchResults.results[0].id;
     const link = containerSearchResults.results[0].url;
 
