@@ -1,55 +1,71 @@
-<div class="details-container">
-  {{#each details as |detail|}}
+{{#if (and details.onDemand details.entity)}}
+  <div>
+    <p>
+      Name: <b>{{details.entity}}</b>
+    </p>
+    <p>
+      Status: <b>This Entity does not exist in Phantom</b>
+    </p>
+    <div class="view-in-ts create-in-phantom">
+      <a class="p-link" href={{details.link}}>Create Event in Phantom Dashboard
+        {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+    </div>
+
+    <h5>
+      {{fa-icon "info-circle" fixedWidth=true}} Create Event and Run Playbook
+    </h5>
+    
+    <div class="runnable-playbooks">
+      <select size=3 onchange={{action 'onSelectPlaybook' value="target.value" }}>
+        {{#each details.playbooks as |playbook|}}
+          <option value="{{playbook.id}}">{{playbook.name}}</option>
+        {{/each}}
+      </select>
+      <button {{action "runPlaybook" null details.entity }} class="btn material btn-primary">Run</button>
+    </div>
+    {{#if message.length}}
+      <span class="message">{{message}}</span>
+    {{/if}}
+  </div>
+{{else}}
+  <div class="detailss-container">
     <div class="item">
       <p>
-        Name:
-        <b>{{detail.result.name}}</b>
+        Name: <b>{{details.result.name}}</b>
       </p>
       <p>
-        Status:
-        <b>{{detail.result.status}}</b>
+        Status: <b>{{details.result.status}}</b>
       </p>
-      <div class="view-in-ts">
-        <a class="p-link" href={{detail.link}}>View in Phantom
-          {{fa-icon "external-link-square" class="external-link-icon"}}</a>
-      </div>
-      {{#if detail.result.description}}
+      
+      {{#if details.result.description}}
         <h5>
           {{fa-icon "file" fixedWidth=true}} Description
         </h5>
         <p>
-          <i>{{detail.result.description}}</i>
+          <i>{{details.result.description}}</i>
         </p>
       {{/if}}
 
       <h5>
         {{fa-icon "info-circle" fixedWidth=true}} Info
       </h5>
+      
       <p>
+        Severity: <b>{{details.result.severity}}</b>
       </p>
       <p>
-        Severity:
-        <b>{{detail.result.severity}}</b>
+        Sensitivity: <b>{{details.result.sensitivity}}</b>
       </p>
       <p>
-        Sensitivity:
-        <b>
-          {{detail.result.sensitivity}}
-        </b>
-      </p>
-      <p>
-        Label:
-        <b>
-          {{detail.result.label}}
-        </b>
+        Label: <b>{{details.result.label}}</b>
       </p>
 
-      {{#if detail.result.tags.length}}
+      {{#if details.result.tags.length}}
         <h5>
           {{fa-icon "info-circle" fixedWidth=true}} Tags
         </h5>
         <ul>
-          {{#each detail.result.tags as |tag|}}
+          {{#each details.result.tags as |tag|}}
             <li>
               {{tag}}
             </li>
@@ -63,20 +79,20 @@
 
       <div class="runnable-playbooks">
         <select size=3 onchange={{action 'onSelectPlaybook' value="target.value" }}>
-          {{#each detail.playbooks as |playbook|}}
+          {{#each details.playbooks as |playbook|}}
             <option value="{{playbook.id}}">{{playbook.name}}</option>
           {{/each}}
         </select>
-        <button {{action "runPlaybook" detail.result.id }} class="btn material btn-primary">Run</button>
+        <button {{action "runPlaybook" details.result.id}} class="btn material btn-primary">Run</button>
       </div>
       {{#if message.length}}
         <span class="message">{{message}}</span>
       {{/if}}
 
       <h1 class="p-title">Playbook Run History</h1>
-      {{#if detail.playbooksRan.length}}        
+      {{#if details.playbooksRan.length}}        
         <div class="wrap-container">
-          {{#each detail.playbooksRan as |playbookRun|}}
+          {{#each details.playbooksRan as |playbookRun|}}
             <span class="playbook-container">
               {{playbookRun.playbookName}} (
               {{#if (gt playbookRun.successCount 0)}}
@@ -95,5 +111,5 @@
         </div>
       {{/if}}
     </div>
-  {{/each}}
-</div>
+  </div>
+{{/if}}

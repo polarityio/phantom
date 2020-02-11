@@ -10,7 +10,7 @@ class Containers {
     this.playbooks = new Playbooks(logger, options);
     this.containers = []
   }
-
+  
   lookupContainers(entities, callback) {
     this.playbooks.listPlaybooks((err, playbooks) => {
       if (err) return callback(err, null);
@@ -24,17 +24,23 @@ class Containers {
             container 
               ? {
                 summary: [container.severity, container.sensitivity].concat(container.tags),
-                details: [{
-                    result: container,
-                    link: container.link,
-                    playbooks: playbooks.data,
-                    playbooksRan: container.playbooksRan
-                  }
-                ],
-                onDemand: entity.requestContext.requestType === "OnDemand"
+                details: {
+                  result: container,
+                  link: container.link,
+                  playbooks: playbooks.data,
+                  playbooksRan: container.playbooksRan
+                }
               }
             : entity.requestContext.requestType === "OnDemand" 
-              ? { onDemand: true, entity } 
+              ? { 
+                summary: ["New Event"],
+                details: {
+                  playbooks: playbooks.data, 
+                  onDemand: true, 
+                  entity: entity.value,
+                  link: `${this.integrationOptions.host}/browse`
+                }
+              } 
               : null
         }));
 
@@ -48,6 +54,7 @@ class Containers {
       (entity, next) => 
         this._getContainerSearchResults(entity, (err, containerSearchResults) => {
           if (err) return next(err, null);
+          if (!containerSearchResults) return next();
           this._getContainerFromSearchResults(entity, containerSearchResults, next)
         }),
       (err) => callback(err, this.containers)
@@ -70,14 +77,14 @@ class Containers {
     request(requestOptions, (err, resp, body)=>{
       this.logger.trace({ results: body, error: err, response: resp }, "Results of entity lookup");
 
-      if (!body || !body.results || body.results.length === 0) {
-        this.containers.push({ entity, container: null});
-        return callback();
-      }
-
       if (resp.statusCode !== 200) {
         this.logger.error({ response: resp }, "Error looking up entities");
         return callback({ error: new Error("request failure") });
+      }
+
+      if (!body || !body.results || body.results.length === 0) {
+        this.containers.push({ entity, container: null });
+        return callback()
       }
 
       return callback(null, body)
@@ -85,7 +92,6 @@ class Containers {
   }
 
   _getContainerFromSearchResults(entity, containerSearchResults, next) {
-    //TODO: Change this to be able to show all results and not just the first
     const id = containerSearchResults.results[0].id;
     const link = containerSearchResults.results[0].url;
 
@@ -128,6 +134,53 @@ class Containers {
   _formatContainer(entity, link, container, playbooksRan, next) {
     this.containers.push({ entity, container: { ...container, link, playbooksRan } });
     next();
+  }
+
+  createContainer(entity, callback) {
+    this._createContainerRequest(entity, (err, container) => {
+      if(err) return callback(err);
+      callback(null, container)
+    })
+  }
+
+  _createContainerRequest(entity, callback) {
+    const requestOptions = ro.getRequestOptions(this.integrationOptions);
+    requestOptions.url = this.integrationOptions.host + "/rest/container";
+    requestOptions.method = "POST";
+    requestOptions.body = {
+      label: "events",
+      name: entity,
+      sensitivity: "amber",
+      severity: "medium",
+      status: "new",
+      container_type: "default",
+      tags: ["polarity"]
+    };  
+
+    this.logger.trace(
+      { options: requestOptions }, 
+      "Request options for Container Creation Request"
+    );
+
+    request(requestOptions, (err, resp, body) => {
+      if (!resp || resp.statusCode !== 200 || err || !body.success) {
+        if (resp.statusCode == 404) {
+          this.logger.info({ entity }, "Entity not in Phantom");
+          this.containers.push({ entity, container: null });
+          return callback();
+        } else {
+          this.logger.error(
+            { error: err, id, body },
+            "error creating container with value" + entity
+          );
+          return callback({ error: err, details: "Failed to Create Container" });
+        }
+      }
+
+      this.logger.trace({ body }, "Adding response to result array");
+
+      callback(null, body)
+    });
   }
 }
 
