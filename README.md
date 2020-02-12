@@ -2,7 +2,7 @@
 
 ![image](https://img.shields.io/badge/status-beta-green.svg)
 
-Polarity's Phantom integration allows automated queries against Phantom's container and artifact database, create containers fron entities, and allows a user to execute pre-defined playbooks from the Polarity overlay window.
+Polarity's Phantom integration allows automated queries against Phantom's container and artifact database, create containers from entities, and allows a user to execute pre-defined playbooks from the Polarity overlay window.
 
 <img width="400" alt="phantomInt" src="https://user-images.githubusercontent.com/22529325/53601678-a44bf100-3b7a-11e9-9a87-c29970c127c5.gif">
 <img width="400" alt="Integration Example" src="./assets/integration-example.png">
