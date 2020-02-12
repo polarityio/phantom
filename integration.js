@@ -51,7 +51,7 @@ function runPlaybook(payload, integrationOptions, callback) {
   } else if (entity) {
     let containers = new Containers(Logger, integrationOptions);
     containers.createContainer(entity, (err, container) => {
-      if (err) return callback({ err, details: "Failed to Create Container" })
+      if (err) return callback({ err: "Failed to Create Container", detail: err })
       playbooks.runPlaybookAgainstContainer(actionId, container.id, (err, resp) => {
         Logger.trace({ resp, err }, "Result of playbook run");
         if (!resp && !err) 
@@ -63,7 +63,7 @@ function runPlaybook(payload, integrationOptions, callback) {
   } else {
     const err = {
       err: "Unexpected Error", 
-      details: "Error: Unexpected value passed when trying to run a playbook"
+      detail: "Error: Unexpected value passed when trying to run a playbook"
     }
     Logger.error({ err, containerId, actionId, entity }, "Error running playbook");
     callback(err)

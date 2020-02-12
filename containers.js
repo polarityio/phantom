@@ -173,7 +173,7 @@ class Containers {
             { error: err, id, body },
             "error creating container with value" + entity
           );
-          return callback({ error: err, details: "Failed to Create Container" });
+          return callback({ err: "Failed to Create Container", detail: err  });
         }
       }
 
