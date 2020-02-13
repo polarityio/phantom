@@ -10,6 +10,7 @@ class Playbooks {
     this.requestWithDefaults = errorHandler(
       request.defaults(ro.getRequestOptions(this.options))
     );
+    this.playbookRuns = [];
   }
 
   listPlaybooks(callback) {
@@ -30,39 +31,52 @@ class Playbooks {
     );
   }
 
-  getPlaybookRunHistory(containerId, callback) {
-    let requestOptions = {};
-    requestOptions.url = this.options.host + "/rest/playbook_run";
-    requestOptions.qs = {
-      _filter_container: this.safeToInt(containerId),
-      page_size: 50,
-      page: 0
-    };
-    requestOptions.json = true;
-    this.logger.trace(
-      { options: requestOptions },
-      "Request options for Historical Playbook Runs Request"
-    );
+  getPlaybookRunHistory(containerIds, callback) {
+    const containerHasBeenRequested = (containerId) => 
+      !!this.playbookRuns.find((playbookRun) => playbookRun.containerId === containerId);
 
-    this.requestWithDefaults(requestOptions, 200, (err, body) => {
-      if (err) {
-        this.logger.error({ error: err, body }, "Got error while trying to run playbook");
-        return callback(err);
-      }
+    async.each(containerIds, 
+      (containerId, next) => {
+        if (containerHasBeenRequested(containerId)) return next() ;
 
-      this.logger.trace({ body }, "Formatting Playbooks Ran Request Results");
-      
-      const playbooksRan = body.data.map((playbookRan) => {
-        const playbookRunInfo = JSON.parse(playbookRan.message);
+        let requestOptions = {};
+        requestOptions.url = this.options.host + "/rest/playbook_run";
+        requestOptions.qs = {
+          _filter_container: this.safeToInt(containerId),
+          page_size: 20,
+          page: 0
+        };
+        requestOptions.json = true;
 
-        return {
-          playbookName: playbookRunInfo.playbook.split("/").slice(-1)[0],
-          status: playbookRunInfo.status
-        }
-      }).reduce(this.getDistinctPlaybookRuns, []);
+        this.logger.trace(
+          { options: requestOptions },
+          "Request options for Historical Playbook Runs Request"
+        );
+        
+        this.requestWithDefaults(requestOptions, 200, (err, body) => {
+          if (err) {
+            this.logger.error({ error: err, body }, "Got error while trying to run playbook");
+            return next(err);
+          }
 
-      callback(null, playbooksRan)
-    });
+          this.logger.trace({ body }, "Formatting Playbooks Ran Request Results");
+          
+          const playbooksRan = body.data.map((playbookRan) => {
+            const playbookRunInfo = JSON.parse(playbookRan.message);
+
+            return {
+              playbookName: playbookRunInfo.playbook.split("/").slice(-1)[0],
+              status: playbookRunInfo.status
+            }
+          }).reduce(this.getDistinctPlaybookRuns, []);
+
+          this.playbookRuns.push({ containerId, playbooksRan })
+
+          next();
+        });
+      },
+      (err) => callback(err, this.playbookRuns)
+    );  
   }
 
   getDistinctPlaybookRuns(agg, playbookRun) {

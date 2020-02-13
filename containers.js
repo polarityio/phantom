@@ -8,7 +8,8 @@ class Containers {
     this.logger = logger;
     this.integrationOptions = options;
     this.playbooks = new Playbooks(logger, options);
-    this.containers = []
+    this.containers = [];
+    this.containerResults = [];
   }
   
   lookupContainers(entities, callback) {
@@ -18,17 +19,15 @@ class Containers {
       this._getContainers(entities, (err, containers) => {
         if (err) return callback(err, null);
 
-        const lookupResults = containers.map(({ entity, container }) => ({
+        const lookupResults = containers.map(({ entity, containers }) => ({
           entity,
           data: 
-            container 
+            containers.length
               ? {
-                summary: [container.severity, container.sensitivity].concat(container.tags),
+                summary: this._getSummary(containers),
                 details: {
-                  result: container,
-                  link: container.link,
                   playbooks: playbooks.data,
-                  playbooksRan: container.playbooksRan
+                  results: containers
                 }
               }
             : entity.requestContext.requestType === "OnDemand" 
@@ -55,6 +54,7 @@ class Containers {
         this._getContainerSearchResults(entity, (err, containerSearchResults) => {
           if (err) return next(err, null);
           if (!containerSearchResults) return next();
+
           this._getContainerFromSearchResults(entity, containerSearchResults, next)
         }),
       (err) => callback(err, this.containers)
@@ -91,51 +91,91 @@ class Containers {
     });
   }
 
-  _getContainerFromSearchResults(entity, containerSearchResults, next) {
-    const id = containerSearchResults.results[0].id;
-    const link = containerSearchResults.results[0].url;
+  _getContainerFromSearchResults(entity, { results }, next) {
+    const ids = results.map(({ id }) => id);
 
-    this._getContainer(id, (err, container) => {
+    this._getContainerResults(ids, (err, containers) => {
       if (err) return next(err, null);
-      this.playbooks.getPlaybookRunHistory(id, (err, playbookRuns) => {
+      if (!containers.length) {
+        this.containers.push({ entity, containers: null });
+        return next()
+      }
+      this.playbooks.getPlaybookRunHistory(ids, (err, containerPlaybookRuns) => {
         if (err) return next(err, null);
-        this._formatContainer(entity, link, container, playbookRuns, next)
+        this._formatContainers(entity, results, containers, containerPlaybookRuns, next)
       })
     });
   }
 
-  _getContainer(id, callback) {
-    const requestOptions = ro.getRequestOptions(this.integrationOptions);
-    requestOptions.url = this.integrationOptions.host + "/rest/container/" + id;
+  _getContainerResults(containerIds, callback) {
+    const containerHasBeenRequested = (containerId) => 
+      this.containerResults.find((containerResult) => containerResult.id === containerId);
 
-    this.logger.trace({ options: requestOptions }, "Request options for Container Request");
+    async.each(containerIds, 
+      (containerId, next) => {
+        if (containerHasBeenRequested(containerId)) return next() ;
+        this.logger.trace({ containerResults: this.containerResults, containerId }, "KJSLDFJ:SKL<JD")
+        const requestOptions = ro.getRequestOptions(this.integrationOptions);
+        requestOptions.url = this.integrationOptions.host + "/rest/container/" + containerId;
+        this.logger.trace({ options: requestOptions }, "Request options for Containers Request");
 
-    request(requestOptions, (err, resp, body) => {
-      if (!resp || resp.statusCode !== 200) {
-        if (resp.statusCode == 404) {
-          this.logger.info({ entity }, "Entity not in Phantom");
-          this.containers.push({ entity, container: null });
-          return callback();
-        } else {
-          this.logger.error(
-            { error: err, id, body },
-            "error looking up container with id " + id
-          );
-          return callback({ error: new Error("error looking up container " + id) });
-        }
-      }
+        request(requestOptions, (err, resp, body) => {
+          
+          if (!resp || resp.statusCode !== 200) {
+            if (resp.statusCode == 404) {
+              this.logger.info({ entity }, "Entity not in Phantom");
+              return next();
+            } else {
+              this.logger.error(
+                { error: err, containerId, body },
+                "error looking up container with containerId " + containerId
+              );
+              return next({ error: new Error("error looking up container " + containerId) });
+            }
+          }
 
-      this.logger.trace({ body }, "Adding response to result array");
+          this.logger.trace({ body }, "Adding response to result array");
 
-      callback(null, body)
-    });
+          this.containerResults.push(body)
+          next()
+        });
+      },
+      (err) => callback(err, this._uniqueBy("id", this.containerResults))
+    );    
   }
 
-  _formatContainer(entity, link, container, playbooksRan, next) {
-    this.containers.push({ entity, container: { ...container, link, playbooksRan } });
+  _uniqueBy(key, arrayOfObjects) {
+    return arrayOfObjects
+      .filter((item, index, self) => 
+        self.findIndex((_item) => _item[key] === item[key]) === index
+      )
+  }
+
+  _formatContainers(entity, results, containers, containerPlaybookRuns, next) {
+    const associatedContainerIds = results.map(({ id }) => id);
+    this.containers.push({ 
+      entity, 
+      containers: containers
+        .filter(({ id }) => associatedContainerIds.includes(id))
+        .map((container) => ({
+          ...container, 
+          link: results.find(({ id }) => id == container.id).url,
+          playbooksRan: containerPlaybookRuns
+            .find(({ containerId }) => containerId === container.id).playbooksRan
+        }))
+    });
     next();
   }
 
+  _getSummary(containers){
+    return containers.reduce((agg, container) => [
+      ...agg,
+      ...container.tags.filter((tag) => !agg.includes(tag)),
+      ...(!agg.includes(container.severity) ? [container.severity] : []),
+      ...(!agg.includes(container.sensitivity) ? [container.sensitivity] : []),
+    ], []);
+  }
+  
   createContainer(entity, callback) {
     this._createContainerRequest(entity, (err, container) => {
       if(err) return callback(err);

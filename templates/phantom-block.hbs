@@ -1,5 +1,8 @@
 {{#if (and details.onDemand details.entity)}}
-  <div>
+  <div class="details-container">
+    <h5>
+      {{fa-icon "info-circle" fixedWidth=true}} Info
+    </h5>
     <p>
       Name: <b>{{details.entity}}</b>
     </p>
@@ -28,88 +31,91 @@
     {{/if}}
   </div>
 {{else}}
-  <div class="detailss-container">
-    <div class="item">
-      <p>
-        Name: <b>{{details.result.name}}</b>
-      </p>
-      <p>
-        Status: <b>{{details.result.status}}</b>
-      </p>
-      
-      {{#if details.result.description}}
+  <div class="details-container">
+    {{#each details.results as |result index|}}
+      {{#if (gt index 0)}}
+        <hr>
+      {{/if}}
+      <div class="item">
         <h5>
-          {{fa-icon "file" fixedWidth=true}} Description
+          {{fa-icon "info-circle" fixedWidth=true}} Info
         </h5>
         <p>
-          <i>{{details.result.description}}</i>
+          Name: <b>{{result.name}}</b>
         </p>
-      {{/if}}
+        <p>
+          Status: <b>{{result.status}}</b>
+        </p>
+        <p>
+          Severity: <b>{{result.severity}}</b>
+        </p>
+        <p>
+          Sensitivity: <b>{{result.sensitivity}}</b>
+        </p>
+        <p>
+          Label: <b>{{result.label}}</b>
+        </p>
 
-      <h5>
-        {{fa-icon "info-circle" fixedWidth=true}} Info
-      </h5>
-      
-      <p>
-        Severity: <b>{{details.result.severity}}</b>
-      </p>
-      <p>
-        Sensitivity: <b>{{details.result.sensitivity}}</b>
-      </p>
-      <p>
-        Label: <b>{{details.result.label}}</b>
-      </p>
+        {{#if result.description}}
+          <h5>
+            {{fa-icon "file" fixedWidth=true}} Description
+          </h5>
+          <p>
+            <i>{{result.description}}</i>
+          </p>
+        {{/if}}
 
-      {{#if details.result.tags.length}}
+        {{#if result.tags.length}}
+          <h5>
+            {{fa-icon "info-circle" fixedWidth=true}} Tags
+          </h5>
+          <ul>
+            {{#each result.tags as |tag|}}
+              <li>
+                {{tag}}
+              </li>
+            {{/each}}
+          </ul>
+        {{/if}}
+
         <h5>
-          {{fa-icon "info-circle" fixedWidth=true}} Tags
+          {{fa-icon "info-circle" fixedWidth=true}} Playbooks
         </h5>
-        <ul>
-          {{#each details.result.tags as |tag|}}
-            <li>
-              {{tag}}
-            </li>
-          {{/each}}
-        </ul>
-      {{/if}}
 
-      <h5>
-        {{fa-icon "info-circle" fixedWidth=true}} Playbooks
-      </h5>
-
-      <div class="runnable-playbooks">
-        <select size=3 onchange={{action 'onSelectPlaybook' value="target.value" }}>
-          {{#each details.playbooks as |playbook|}}
-            <option value="{{playbook.id}}">{{playbook.name}}</option>
-          {{/each}}
-        </select>
-        <button {{action "runPlaybook" details.result.id}} class="btn material btn-primary">Run</button>
-      </div>
-      {{#if message.length}}
-        <span class="message">{{message}}</span>
-      {{/if}}
-
-      {{#if details.playbooksRan.length}}        
-        <h1 class="p-title">Playbook Run History</h1>
-        <div class="wrap-container">
-          {{#each details.playbooksRan as |playbookRun|}}
-            <span class="playbook-container">
-              {{playbookRun.playbookName}} (
-              {{#if (gt playbookRun.successCount 0)}}
-                <span style="color: green; font-weight: 500;">Succ {{playbookRun.successCount}}</span>
-                {{if (or (gt playbookRun.pendingCount 0) (gt playbookRun.failureCount 0)) ","}}
-              {{/if}}
-              {{#if (gt playbookRun.pendingCount 0)}}
-                <span style="color: orange; font-weight: 500;">Pend {{playbookRun.pendingCount}}</span>
-                {{if (gt playbookRun.failureCount 0) ","}}
-              {{/if}}
-              {{#if (gt playbookRun.failureCount 0)}}
-                <span style="color: red; font-weight: 500;">Fail {{playbookRun.failureCount}}</span>
-              {{/if}})
-            </span>
-          {{/each}}
+        <div class="runnable-playbooks">
+          <select size=3 onchange={{action 'onSelectPlaybook' value="target.value" }}>
+            {{#each details.playbooks as |playbook|}}
+              <option value="{{playbook.id}}">{{playbook.name}}</option>
+            {{/each}}
+          </select>
+          <button {{action "runPlaybook" result.id}} class="btn material btn-primary">Run</button>
         </div>
-      {{/if}}
-    </div>
+        {{#if message.length}}
+          <span class="message">{{message}}</span>
+        {{/if}}
+
+        {{#if result.playbooksRan.length}}        
+          <h1 class="p-title">Playbook Run History</h1>
+          <div class="wrap-container">
+            {{#each result.playbooksRan as |playbookRun|}}
+              <span class="playbook-container">
+                {{playbookRun.playbookName}} (
+                {{#if (gt playbookRun.successCount 0)}}
+                  <span style="color: green; font-weight: 500;">Succ {{playbookRun.successCount}}</span>
+                  {{if (or (gt playbookRun.pendingCount 0) (gt playbookRun.failureCount 0)) ","}}
+                {{/if}}
+                {{#if (gt playbookRun.pendingCount 0)}}
+                  <span style="color: orange; font-weight: 500;">Pend {{playbookRun.pendingCount}}</span>
+                  {{if (gt playbookRun.failureCount 0) ","}}
+                {{/if}}
+                {{#if (gt playbookRun.failureCount 0)}}
+                  <span style="color: red; font-weight: 500;">Fail {{playbookRun.failureCount}}</span>
+                {{/if}})
+              </span>
+            {{/each}}
+          </div>
+        {{/if}}
+      </div>
+    {{/each}}
   </div>
 {{/if}}
