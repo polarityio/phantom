@@ -1,12 +1,13 @@
 let Containers = require("./containers");
-let validator = require("./validator");
+let validateOptions = require("./validator");
 let Playbooks = require("./playbooks");
 
 let Logger;
 
-function doLookup(entities, integrationOptions, callback) {
+function doLookup(entities, { host, ..._options }, callback) {
+  let integrationOptions = { ..._options, host: host.endsWith("/") ? host.slice(0, -1) : host };
   Logger.trace(
-    { entities: entities, options: integrationOptions },
+    { entities, options: integrationOptions },
     "Entities received by integration"
   );
 
@@ -71,8 +72,8 @@ function runPlaybook(payload, integrationOptions, callback) {
 }
 
 module.exports = {
-  doLookup: doLookup,
-  startup: startup,
-  validateOptions: validator.validateOptions,
+  doLookup,
+  startup,
+  validateOptions,
   onMessage: runPlaybook
 };

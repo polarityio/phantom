@@ -79,7 +79,10 @@ class Containers {
 
       if (resp.statusCode !== 200) {
         this.logger.error({ response: resp }, "Error looking up entities");
-        return callback({ error: new Error("request failure") });
+        return callback({ 
+          error: new Error("Failed on Container Search Request"), 
+          detail: "Error in Container Search Request"
+        });
       }
 
       if (!body || !body.results || body.results.length === 0) {
@@ -95,13 +98,13 @@ class Containers {
     const ids = results.map(({ id }) => id);
 
     this._getContainerResults(ids, (err, containers) => {
-      if (err) return next(err, null);
+      if (err) return next({ err, detail: "Error getting Container Details" });
       if (!containers.length) {
         this.containers.push({ entity, containers: [] });
         return next()
       }
       this.playbooks.getPlaybookRunHistory(ids, (err, containerPlaybookRuns) => {
-        if (err) return next(err, null);
+        if (err) return next({ err, detail: "Error getting Container Playbook History" });
         this._formatContainers(entity, results, containers, containerPlaybookRuns, next)
       })
     });
@@ -114,7 +117,6 @@ class Containers {
     async.each(containerIds, 
       (containerId, next) => {
         if (containerHasBeenRequested(containerId)) return next() ;
-        this.logger.trace({ containerResults: this.containerResults, containerId }, "KJSLDFJ:SKL<JD")
         const requestOptions = ro.getRequestOptions(this.integrationOptions);
         requestOptions.url = this.integrationOptions.host + "/rest/container/" + containerId;
         this.logger.trace({ options: requestOptions }, "Request options for Containers Request");

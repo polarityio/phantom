@@ -26,7 +26,8 @@ class Playbooks {
       },
       200,
       (err, body) => {
-        if (err) return callback(err);
+        if (err) 
+          return callback({ err, detail: "Error in getting List of Playbooks to Run" });
         callback(null, body);
       }
     );
