@@ -83,7 +83,7 @@ class Containers {
       }
 
       if (!body || !body.results || body.results.length === 0) {
-        this.containers.push({ entity, container: null });
+        this.containers.push({ entity, containers: [] });
         return callback()
       }
 
@@ -97,7 +97,7 @@ class Containers {
     this._getContainerResults(ids, (err, containers) => {
       if (err) return next(err, null);
       if (!containers.length) {
-        this.containers.push({ entity, containers: null });
+        this.containers.push({ entity, containers: [] });
         return next()
       }
       this.playbooks.getPlaybookRunHistory(ids, (err, containerPlaybookRuns) => {
@@ -206,7 +206,7 @@ class Containers {
       if (!resp || resp.statusCode !== 200 || err || !body.success) {
         if (resp.statusCode == 404) {
           this.logger.info({ entity }, "Entity not in Phantom");
-          this.containers.push({ entity, container: null });
+          this.containers.push({ entity, containers: [] });
           return callback();
         } else {
           this.logger.error(
