@@ -15,12 +15,19 @@
   <h1 class="p-title">{{fa-icon "info-circle" fixedWidth=true}} Create Event and Run Playbook</h1>
 
   <div class="runnable-playbooks">
-    <select size=3 onchange={{action 'onSelectPlaybook' value="target.value" }}>
+    <select class="w-100" size=5 onchange={{action (mut selectedPlaybookId) value="target.value"}}>
       {{#each details.playbooks as |playbook|}}
         <option value="{{playbook.id}}">{{playbook.name}}</option>
       {{/each}}
     </select>
-    <button {{action "runPlaybook" null details.entity }} class="btn material btn-primary">Run</button>
+    <div class="d-flex flex-row justify-content-between align-items-center">
+      <div>
+        {{#if message.length}}
+          <span class="message">{{message}}</span>
+        {{/if}}
+      </div>
+      <button {{action "runPlaybook" result.id null selectedPlaybookId details.entity}} class="p-btn btn btn-primary mt-1">Run Playbook</button>
+    </div>
   </div>
   {{#if message.length}}
     <span class="message">{{message}}</span>
@@ -74,17 +81,30 @@
       {{/if}}
 
       <h1 class="p-title">{{fa-icon "book" fixedWidth=true}} Playbooks</h1>
-      <div class="runnable-playbooks">
-        <select size=3 onchange={{action 'onSelectPlaybook' value="target.value" }}>
-          {{#each details.playbooks as |playbook|}}
-            <option value="{{playbook.id}}">{{playbook.name}}</option>
-          {{/each}}
-        </select>
-        <button {{action "runPlaybook" result.id}} class="btn material btn-primary">Run</button>
+      {{!-- Leaving here until we have an overlay window based power-select
+      {{#power-select
+              options=details.playbooks
+              selected=selectedPlaybook
+              searchEnabled=true
+              searchField="name"
+              placeholder="Playbooks"
+              onchange=(action (mut selectedPlaybook)) as |playbook|}}
+        {{humanize playbook.name}}
+      {{/power-select}}
+      --}}
+      <select class="w-100" size=5 onchange={{action (mut selectedPlaybookId) value="target.value"}}>
+        {{#each details.playbooks as |playbook|}}
+          <option value="{{playbook.id}}">{{playbook.name}}</option>
+        {{/each}}
+      </select>
+      <div class="d-flex flex-row justify-content-between align-items-center">
+        <div>
+          {{#if message.length}}
+            <span class="message">{{message}}</span>
+          {{/if}}
+        </div>
+        <button {{action "runPlaybook" result.id selectedPlaybookId}} class="p-btn btn btn-primary mt-1">Run Playbook</button>
       </div>
-      {{#if message.length}}
-        <span class="message">{{message}}</span>
-      {{/if}}
 
       {{#if result.playbooksRan.length}}
         <h1 class="p-title">{{fa-icon "history" fixedWidth=true}} Playbook Run History</h1>
