@@ -11,6 +11,7 @@ class Playbooks {
       request.defaults(ro.getRequestOptions(this.options))
     );
     this.playbookRuns = [];
+    this.playbookNames = [];
   }
 
   listPlaybooks(callback) {
@@ -32,12 +33,13 @@ class Playbooks {
   }
 
   getPlaybookRunHistory(containerIds, callback) {
-    const containerHasBeenRequested = (containerId) => 
+    const containerHasBeenRequested = (containerId) =>
       !!this.playbookRuns.find((playbookRun) => playbookRun.containerId === containerId);
 
-    async.each(containerIds, 
+    async.each(
+      containerIds,
       (containerId, next) => {
-        if (containerHasBeenRequested(containerId)) return next() ;
+        if (containerHasBeenRequested(containerId)) return next();
 
         let requestOptions = {};
         requestOptions.url = this.options.host + "/rest/playbook_run";
@@ -52,70 +54,148 @@ class Playbooks {
           { options: requestOptions },
           "Request options for Historical Playbook Runs Request"
         );
-        
+
         this.requestWithDefaults(requestOptions, 200, (err, body) => {
           if (err) {
-            this.logger.error({ error: err, body }, "Got error while trying to run playbook");
+            this.logger.error(
+              { error: err, body },
+              "Got error while trying to run playbook"
+            );
             return next(err);
           }
 
           this.logger.trace({ body }, "Formatting Playbooks Ran Request Results");
-          
-          const playbooksRan = body.data.map((playbookRan) => {
-            const playbookRunInfo = JSON.parse(playbookRan.message);
 
-            return {
-              playbookName: playbookRunInfo.playbook.split("/").slice(-1)[0],
-              status: playbookRunInfo.status
-            }
-          }).reduce(this.getDistinctPlaybookRuns, []);
+          const playbooksRanWithUnknowns = this.formatPlaybookRuns(body);
 
-          this.playbookRuns.push({ containerId, playbooksRan })
-
-          next();
+          this.getUnknownPlaybookNames(playbooksRanWithUnknowns, (err, playbooksRan) => {
+            if (err) return next(err);
+            this.playbookRuns.push({ containerId, playbooksRan });
+            next();
+          });
         });
       },
       (err) => callback(err, this.playbookRuns)
-    );  
+    );
   }
 
   getDistinctPlaybookRuns(agg, playbookRun) {
-    const existingPlaybookRunIndex = 
-      agg.findIndex(({ playbookName }) => playbookName === playbookRun.playbookName);
-    
-    const aggAndReplaceExistingPlaybookRun = () => ([
+    const existingPlaybookRunIndex = agg.findIndex(
+      ({ playbookName }) => playbookName === playbookRun.playbookName
+    );
+
+    const aggAndReplaceExistingPlaybookRun = () => [
       ...agg.slice(0, existingPlaybookRunIndex),
       {
         ...agg[existingPlaybookRunIndex],
-        ...(
-          playbookRun.status === "success" ? 
-            { successCount: agg[existingPlaybookRunIndex].successCount + 1 } :
-          playbookRun.status === "failure" ? 
-            { failureCount: agg[existingPlaybookRunIndex].failureCount + 1 } :
-            { pendingCount: agg[existingPlaybookRunIndex].pendingCount + 1 }
-        )
+        ...(playbookRun.status === "success"
+          ? { successCount: agg[existingPlaybookRunIndex].successCount + 1 }
+          : playbookRun.status === "failure"
+          ? { failureCount: agg[existingPlaybookRunIndex].failureCount + 1 }
+          : { pendingCount: agg[existingPlaybookRunIndex].pendingCount + 1 })
       },
       ...agg.slice(existingPlaybookRunIndex + 1)
-    ]);
-    
-    const aggNewPlaybookRun = () => ([
-      ...agg,
-      { 
-        ...playbookRun,
-        successCount: 0, failureCount: 0, pendingCount: 0,
-        ...(
-          playbookRun.status === "success" ? { successCount: 1 } :
-          playbookRun.status === "failure" ? { failureCount: 1 } :
-          { pendingCount: 1 }
-        )
-      }
-    ]);
+    ];
 
-    return existingPlaybookRunIndex !== -1 ? 
-      aggAndReplaceExistingPlaybookRun() : 
-      aggNewPlaybookRun()
+    const aggNewPlaybookRun = () => [
+      ...agg,
+      {
+        ...playbookRun,
+        successCount: 0,
+        failureCount: 0,
+        pendingCount: 0,
+        ...(playbookRun.status === "success"
+          ? { successCount: 1 }
+          : playbookRun.status === "failure"
+          ? { failureCount: 1 }
+          : { pendingCount: 1 })
+      }
+    ];
+
+    return existingPlaybookRunIndex !== -1
+      ? aggAndReplaceExistingPlaybookRun()
+      : aggNewPlaybookRun();
   }
-  
+
+  formatPlaybookRuns(body) {
+    return body.data.map((playbookRan) => {
+      const playbookRunInfo =
+        playbookRan.message[0] === "{"
+          ? JSON.parse(playbookRan.message)
+          : { playbook: "/Unknown" };
+
+      if (!playbookRunInfo.status) this.logger.trace({ message: playbookRan.message });
+
+      return {
+        playbookId: this.safeToInt(playbookRan.playbook),
+        playbookName: playbookRunInfo.playbook.split("/").slice(-1)[0],
+        status: playbookRunInfo.status || "pending"
+      };
+    });
+  }
+
+  getUnknownPlaybookNames(playbooksRanWithUnknowns, callback) {
+    let unknownPlaybooksWithNames = [];
+    const [knownPlaybookRuns, unknownPlaybookRuns] = playbooksRanWithUnknowns.reduce(
+      (agg, playbookRun) =>
+        playbookRun.playbookName === "Unknown"
+          ? [[...agg[0]], [...agg[1], playbookRun]]
+          : [[...agg[0], playbookRun], [...agg[1]]],
+      [[], []]
+    );
+
+    const checkForPlaybookName = (_playbookId) =>
+      this.playbookNames.find(({ playbookId }) => playbookId === _playbookId);
+
+    async.each(
+      unknownPlaybookRuns,
+      (unknownPlaybookRun, next) => {
+        const playbookNameFound = checkForPlaybookName(unknownPlaybookRun.playbookId);
+        if (playbookNameFound){
+          unknownPlaybooksWithNames.push({ ...unknownPlaybookRun, ...playbookNameFound });
+          return next();
+        }
+
+        this.getPlaybookName(
+          unknownPlaybookRun.playbookId,
+          (err, playbookId, playbookName) => {
+            if (err) return next(err);
+            this.playbookNames.push({ playbookId, playbookName });
+            unknownPlaybooksWithNames.push({ ...unknownPlaybookRun, playbookName });
+            next();
+          }
+        );
+      },
+      (err) =>
+        callback(err, 
+          [...knownPlaybookRuns, ...unknownPlaybooksWithNames]
+          .reduce(this.getDistinctPlaybookRuns, []))
+    );
+  }
+
+  getPlaybookName(playbookId, callback) {
+    let requestOptions = {};
+    requestOptions.url =
+      this.options.host + "/rest/playbook/" + playbookId;
+    requestOptions.json = true;
+
+    this.logger.trace(
+      { options: requestOptions },
+      "Request options for a Playbook Name Request"
+    );
+
+    this.requestWithDefaults(requestOptions, 200, (err, body) => {
+      if (err) {
+        this.logger.error({ error: err, body }, "Got error while trying to run playbook");
+        return callback(err);
+      }
+
+      this.logger.trace({ body }, "Formatting Playbooks Ran Request Results");
+
+      callback(null, playbookId, body.name);
+    });
+  }
+
   // will try to convert to a number otherwise will return the value passed in
   safeToInt(value) {
     if (typeof value === "number") return value;
