@@ -1,7 +1,14 @@
 polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias('block.data.details'),
   containers: Ember.computed.alias('details.results'),
+  message: '',
+  timezone: Ember.computed('Intl', function() {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }),
   actions: {
+    changeTab: function(containerIndex, tabName) {
+      this.set(`containers.${containerIndex}.__activeTab`, tabName);
+    },
     runPlaybook: function(containerIndex, containerId, playbookId, entity) {
       let self = this;
       self.set('message', null);
@@ -25,6 +32,5 @@ polarity.export = PolarityComponent.extend({
   },
   setMessage(containerIndex, msg){
     this.set(`containers.${containerIndex}.__message`, msg);
-  },
-  message: ''
+  }
 });

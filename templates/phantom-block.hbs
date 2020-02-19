@@ -39,94 +39,107 @@
     {{/if}}
 
     <a class="p-link" href={{container.link}}>View in Phantom
-        {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+      {{fa-icon "external-link-square" class="external-link-icon"}}</a>
 
-    <h1 class="p-title">
-      {{fa-icon "info-circle" fixedWidth=true}} Container Info
-    </h1>
-    <div>
-      <span class="p-key">Name:</span>
-      <span class="p-value">{{container.name}}</span>
-    </div>
-    <div>
-      <span class="p-key">Status:</span>
-      <span class="p-value">{{container.status}}</span>
-    </div>
-    <div>
-      <span class="p-key">Severity:</span>
-      <span class="p-value">{{container.severity}}</span>
-    </div>
-    <div>
-      <span class="p-key">Sensitivity:</span>
-      <span class="p-value">{{container.sensitivity}}</span>
-    </div>
-    <div>
-      <span class="p-key">Label:</span>
-      <span class="p-value">{{container.label}}</span>
-    </div>
+    <ul class="nav nav-tabs mt-2">
+      <li class="nav-item">
+        <a {{action "changeTab" containerIndex "info"}} class="nav-link  {{if (or (eq container.__activeTab "info")(not container.__activeTab)) "active"}}" href="#">Info</a>
+      </li>
+      <li class="nav-item">
+        <a {{action "changeTab" containerIndex "history"}} class="nav-link {{if (eq container.__activeTab "history") "active"}}" href="#">Playbook
+          History</a>
+      </li>
+    </ul>
 
-    {{#if container.description}}
-      <h1 class="p-title">{{fa-icon "file" fixedWidth=true}} Description</h1>
-      <p>
-        {{container.description}}
-      </p>
-    {{/if}}
-
-    {{#if container.tags.length}}
-      <h1 class="p-title">{{fa-icon "tags" fixedWidth=true}} Tags</h1>
-      {{#each container.tags as |tag|}}
-        <span class="tag">{{tag}}</span>
-      {{/each}}
-    {{/if}}
-
-    <h1 class="p-title">{{fa-icon "book" fixedWidth=true}} Playbooks</h1>
-    {{!-- Leaving here until we have an overlay window based power-select
-    {{#power-select
-            options=details.playbooks
-            selected=selectedPlaybook
-            searchEnabled=true
-            searchField="name"
-            placeholder="Playbooks"
-            onchange=(action (mut selectedPlaybook)) as |playbook|}}
-      {{humanize playbook.name}}
-    {{/power-select}}
-    --}}
-    <select class="w-100" size=5 onchange={{action (mut container.__selectedPlaybookId) value="target.value"}}>
-      {{#each details.playbooks as |playbook index|}}
-        <option value="{{playbook.id}}">{{playbook.name}}</option>
-      {{/each}}
-    </select>
-    <div class="d-flex flex-row justify-content-between align-items-center">
+    {{#if (or (eq container.__activeTab "info") (not container.__activeTab))}}
+      <h1 class="p-title">
+        {{fa-icon "info-circle" fixedWidth=true}} Container Info
+      </h1>
       <div>
-        {{#if container.__message}}
-          <span class="message">{{container.__message}}</span>
-        {{/if}}
+        <span class="p-key">Name:</span>
+        <span class="p-value">{{container.name}}</span>
       </div>
-      <button {{action "runPlaybook" containerIndex container.id container.__selectedPlaybookId}}
-              class="p-btn btn btn-light mt-1">Run Playbook
-      </button>
-    </div>
+      <div>
+        <span class="p-key">Status:</span>
+        <span class="p-value">{{container.status}}</span>
+      </div>
+      <div>
+        <span class="p-key">Severity:</span>
+        <span class="p-value">{{container.severity}}</span>
+      </div>
+      <div>
+        <span class="p-key">Sensitivity:</span>
+        <span class="p-value">{{container.sensitivity}}</span>
+      </div>
+      <div>
+        <span class="p-key">Label:</span>
+        <span class="p-value">{{container.label}}</span>
+      </div>
 
-    {{#if container.playbooksRan.length}}
-      <h1 class="p-title">{{fa-icon "history" fixedWidth=true}} Playbook Run Summary</h1>
-      <div class="wrap-container">
-        {{#each container.playbooksRan as |playbookRun|}}
-          <div class="playbook-container">
-                {{playbookRun.playbookName}} (
-            {{#if (gt playbookRun.successCount 0)}}
-              <span style="color: green; font-weight: 500;">Succ {{playbookRun.successCount}}</span>
-              {{if (or (gt playbookRun.pendingCount 0) (gt playbookRun.failureCount 0)) ","}}
-            {{/if}}
-            {{#if (gt playbookRun.pendingCount 0)}}
-              <span style="color: orange; font-weight: 500;">Pend {{playbookRun.pendingCount}}</span>
-              {{if (gt playbookRun.failureCount 0) ","}}
-            {{/if}}
-            {{#if (gt playbookRun.failureCount 0)}}
-              <span style="color: red; font-weight: 500;">Fail {{playbookRun.failureCount}}</span>
-            {{/if}})
-              </div>
+      {{#if container.description}}
+        <h1 class="p-title">{{fa-icon "file" fixedWidth=true}} Description</h1>
+        <p>
+          {{container.description}}
+        </p>
+      {{/if}}
+
+      {{#if container.tags.length}}
+        <h1 class="p-title">{{fa-icon "tags" fixedWidth=true}} Tags</h1>
+        {{#each container.tags as |tag|}}
+          <span class="tag">{{tag}}</span>
         {{/each}}
+      {{/if}}
+
+      <h1 class="p-title">{{fa-icon "book" fixedWidth=true}} Playbooks</h1>
+      {{!-- Leaving here until we have an overlay window based power-select
+      {{#power-select
+              options=details.playbooks
+              selected=selectedPlaybook
+              searchEnabled=true
+              searchField="name"
+              placeholder="Playbooks"
+              onchange=(action (mut selectedPlaybook)) as |playbook|}}
+        {{humanize playbook.name}}
+      {{/power-select}}
+      --}}
+      <select class="w-100" size=5 onchange={{action (mut container.__selectedPlaybookId) value="target.value"}}>
+        {{#each details.playbooks as |playbook index|}}
+          <option value="{{playbook.id}}">{{playbook.name}}</option>
+        {{/each}}
+      </select>
+      <div class="d-flex flex-row justify-content-between align-items-center">
+        <div>
+          {{#if container.__message}}
+            <span class="message">{{container.__message}}</span>
+          {{/if}}
+        </div>
+        <button {{action "runPlaybook" containerIndex container.id container.__selectedPlaybookId}}
+                class="p-btn btn btn-light mt-1">Run Playbook
+        </button>
       </div>
+    {{/if}}
+    {{#if (eq container.__activeTab "history")}}
+      {{#if container.playbooksRan.length}}
+        <h1 class="p-title">{{fa-icon "history" fixedWidth=true}} Playbook Run Summary</h1>
+        <div class="wrap-container">
+          {{#each container.playbooksRan as |playbookRun|}}
+            <div class="playbook-container">
+              {{playbookRun.playbookName}} (
+              {{#if (gt playbookRun.successCount 0)}}
+                <span style="color: green; font-weight: 500;">Succ {{playbookRun.successCount}}</span>
+                {{if (or (gt playbookRun.pendingCount 0) (gt playbookRun.failureCount 0)) ","}}
+              {{/if}}
+              {{#if (gt playbookRun.pendingCount 0)}}
+                <span style="color: orange; font-weight: 500;">Pend {{playbookRun.pendingCount}}</span>
+                {{if (gt playbookRun.failureCount 0) ","}}
+              {{/if}}
+              {{#if (gt playbookRun.failureCount 0)}}
+                <span style="color: red; font-weight: 500;">Fail {{playbookRun.failureCount}}</span>
+              {{/if}})
+            </div>
+          {{/each}}
+        </div>
+      {{/if}}
     {{/if}}
   {{/each}}
 {{/if}}
