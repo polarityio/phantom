@@ -11,7 +11,7 @@ class Containers {
     this.containers = [];
     this.containerResults = [];
   }
-  
+
   lookupContainers(entities, callback) {
     this.playbooks.listPlaybooks((err, playbooks) => {
       if (err) return callback(err, null);
@@ -19,7 +19,7 @@ class Containers {
       this._getContainers(entities, (err, containers) => {
         if (err) return callback(err, null);
 
-        const lookupResults = containers.map(({ entity, containers }) => ({
+         const lookupResults = containers.map(({ entity, containers }) => ({
           entity,
           data: 
             containers.length
@@ -49,13 +49,14 @@ class Containers {
   }
 
   _getContainers(entities, callback) {
-    async.each(entities, 
-      (entity, next) => 
+    async.each(
+      entities,
+      (entity, next) =>
         this._getContainerSearchResults(entity, (err, containerSearchResults) => {
           if (err) return next(err, null);
           if (!containerSearchResults) return next();
 
-          this._getContainerFromSearchResults(entity, containerSearchResults, next)
+          this._getContainerFromSearchResults(entity, containerSearchResults, next);
         }),
       (err) => callback(err, this.containers)
     );
@@ -74,23 +75,26 @@ class Containers {
       "Request options for Container Search"
     );
 
-    request(requestOptions, (err, resp, body)=>{
-      this.logger.trace({ results: body, error: err, response: resp }, "Results of entity lookup");
+    request(requestOptions, (err, resp, body) => {
+      this.logger.trace(
+        { results: body, error: err, response: resp },
+        "Results of entity lookup"
+      );
 
       if (resp.statusCode !== 200) {
         this.logger.error({ response: resp }, "Error looking up entities");
-        return callback({ 
-          error: new Error("Failed on Container Search Request"), 
+        return callback({
+          error: new Error("Failed on Container Search Request"),
           detail: "Error in Container Search Request"
         });
       }
 
       if (!body || !body.results || body.results.length === 0) {
         this.containers.push({ entity, containers: [] });
-        return callback()
+        return callback();
       }
 
-      return callback(null, body)
+      return callback(null, body);
     });
   }
 
@@ -101,25 +105,30 @@ class Containers {
       if (err) return next({ err, detail: "Error getting Container Details" });
       if (!containers.length) {
         this.containers.push({ entity, containers: [] });
-        return next()
+        return next();
       }
       this.playbooks.getPlaybookRunHistory(ids, (err, containerPlaybookRuns) => {
         if (err) return next({ err, detail: "Error getting Container Playbook History" });
-        this._formatContainers(entity, results, containers, containerPlaybookRuns, next)
-      })
+        this._formatContainers(entity, results, containers, containerPlaybookRuns, next);
+      });
     });
   }
 
   _getContainerResults(containerIds, entity, callback) {
-    const containerHasBeenRequested = (containerId) => 
+    const containerHasBeenRequested = (containerId) =>
       this.containerResults.find((containerResult) => containerResult.id === containerId);
 
-    async.each(containerIds, 
+    async.each(
+      containerIds,
       (containerId, next) => {
-        if (containerHasBeenRequested(containerId)) return next() ;
+        if (containerHasBeenRequested(containerId)) return next();
         const requestOptions = ro.getRequestOptions(this.integrationOptions);
-        requestOptions.url = this.integrationOptions.host + "/rest/container/" + containerId;
-        this.logger.trace({ options: requestOptions }, "Request options for Containers Request");
+        requestOptions.url =
+          this.integrationOptions.host + "/rest/container/" + containerId;
+        this.logger.trace(
+          { options: requestOptions },
+          "Request options for Containers Request"
+        );
 
         request(requestOptions, (err, resp, body) => {
           if (!resp || resp.statusCode !== 200) {
@@ -131,57 +140,66 @@ class Containers {
                 { error: err, containerId, body },
                 "error looking up container with containerId " + containerId
               );
-              return next({ error: new Error("error looking up container " + containerId) });
+              return next({
+                error: new Error("error looking up container " + containerId)
+              });
             }
           }
 
           this.logger.trace({ body }, "Adding response to result array");
 
-          this.containerResults.push(body)
-          next()
+          this.containerResults.push(body);
+          next();
         });
       },
       (err) => callback(err, this._uniqueBy("id", this.containerResults))
-    );    
+    );
   }
 
   _uniqueBy(key, arrayOfObjects) {
-    return arrayOfObjects
-      .filter((item, index, self) => 
-        self.findIndex((_item) => _item[key] === item[key]) === index
-      )
+    return arrayOfObjects.filter(
+      (item, index, self) => self.findIndex((_item) => _item[key] === item[key]) === index
+    );
   }
 
   _formatContainers(entity, results, containers, containerPlaybookRuns, next) {
     const associatedContainerIds = results.map(({ id }) => id);
-    this.containers.push({ 
-      entity, 
+    this.containers.push({
+      entity,
       containers: containers
         .filter(({ id }) => associatedContainerIds.includes(id))
-        .map((container) => ({
-          ...container, 
-          link: results.find(({ id }) => id == container.id).url,
-          playbooksRan: containerPlaybookRuns
-            .find(({ containerId }) => containerId === container.id).playbooksRan
-        }))
+        .map((container) => {
+          const playbooksRanInfo = containerPlaybookRuns.find(
+            ({ containerId }) => containerId === container.id
+          );
+          return {
+            ...container,
+            link: results.find(({ id }) => id == container.id).url,
+            playbooksRanCount: playbooksRanInfo.playbooksRanCount,
+            playbooksRan: playbooksRanInfo.playbooksRan
+          };
+        })
     });
     next();
   }
 
-  _getSummary(containers){
-    return containers.reduce((agg, container) => [
-      ...agg,
-      ...container.tags.filter((tag) => !agg.includes(tag)),
-      ...(!agg.includes(container.severity) ? [container.severity] : []),
-      ...(!agg.includes(container.sensitivity) ? [container.sensitivity] : []),
-    ], []);
+  _getSummary(containers) {
+    return containers.reduce(
+      (agg, container) => [
+        ...agg,
+        ...container.tags.filter((tag) => !agg.includes(tag)),
+        ...(!agg.includes(container.severity) ? [container.severity] : []),
+        ...(!agg.includes(container.sensitivity) ? [container.sensitivity] : [])
+      ],
+      []
+    );
   }
-  
+
   createContainer(entity, callback) {
     this._createContainerRequest(entity, (err, container) => {
-      if(err) return callback(err);
-      callback(null, container)
-    })
+      if (err) return callback(err);
+      callback(null, container);
+    });
   }
 
   _createContainerRequest(entity, callback) {
@@ -196,10 +214,10 @@ class Containers {
       status: "new",
       container_type: "default",
       tags: ["polarity"]
-    };  
+    };
 
     this.logger.trace(
-      { options: requestOptions }, 
+      { options: requestOptions },
       "Request options for Container Creation Request"
     );
 
@@ -214,13 +232,13 @@ class Containers {
             { error: err, id, body },
             "error creating container with value" + entity
           );
-          return callback({ err: "Failed to Create Container", detail: err  });
+          return callback({ err: "Failed to Create Container", detail: err });
         }
       }
 
       this.logger.trace({ body }, "Adding response to result array");
 
-      callback(null, body)
+      callback(null, body);
     });
   }
 }

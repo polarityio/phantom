@@ -125,7 +125,7 @@
       {{#if container.playbooksRan.length}}
         <h1 class="p-title">
           {{fa-icon "history" fixedWidth=true}}
-          Playbook Run Summary ({{container.playbooksRan.length}})
+          Playbook Run Summary ({{container.playbooksRanCount}})
         </h1>
         <div class="wrap-container">
           {{#each container.playbooksRan as |playbookRun|}}
@@ -149,6 +149,10 @@
               </div>
             </div>
           {{/each}}
+          {{#if (gt container.playbooksRanCount container.playbooksRan.length)}}
+            <a class="p-link" href={{container.link}}>
+              ...{{fa-icon "external-link-square" class="external-link-icon"}}</a>
+          {{/if}}
         </div>
       {{else}}
         <div>

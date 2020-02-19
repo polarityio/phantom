@@ -26,7 +26,7 @@ polarity.export = PolarityComponent.extend({
         })
         .catch(function(err) {
           console.error(err);
-          self.setMessage(containerIndex, err.title);
+          self.setMessage(containerIndex, err.message || err.title);
         });
     }
   },

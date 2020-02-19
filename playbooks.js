@@ -72,7 +72,11 @@ class Playbooks {
 
           this.getUnknownPlaybookNames(playbooksRanWithUnknowns, (err, playbooksRan) => {
             if (err) return next(err);
-            this.playbookRuns.push({ containerId, playbooksRan });
+            this.playbookRuns.push({
+              containerId,
+              playbooksRanCount: playbooksRan.length,
+              playbooksRan: playbooksRan.slice(0, 20)
+            });
             next();
           });
         });
@@ -132,7 +136,7 @@ class Playbooks {
         playbookId: this.safeToInt(playbookRan.playbook),
         playbookName: playbookRunInfo.playbook.split("/").slice(-1)[0],
         status: playbookRunInfo.status || "failure",
-        date: moment(playbookRan.update_time).format('MMM D YY, h:mm A')
+        date: moment(playbookRan.update_time).format("MMM D YY, h:mm A")
       };
     });
   }
@@ -173,13 +177,15 @@ class Playbooks {
         );
       },
       (err) => {
-        this.logger.trace({ asdfasdfsdfds: [...knownPlaybookRuns, ...unknownPlaybooksWithNames] })
+        this.logger.trace({
+          asdfasdfsdfds: [...knownPlaybookRuns, ...unknownPlaybooksWithNames]
+        });
         callback(
           err,
           [...knownPlaybookRuns, ...unknownPlaybooksWithNames].sort((a, b) =>
             moment(new Date(b.date)).diff(moment(new Date(a.date)))
           )
-        )
+        );
       }
     );
   }
@@ -264,7 +270,8 @@ class Playbooks {
         },
         (err, body) => {
           if (err) return callback(err, body);
-          if (status == "failed") return callback({ error: "status was failed" }, body);
+          if (status == "failed")
+            return callback({ error: body, detail: "Playbook Run Failed", message: body.message }, body);
           callback(null, body);
         }
       );
