@@ -38,8 +38,11 @@
       <hr>
     {{/if}}
 
+    <a class="p-link" href={{container.link}}>View in Phantom
+        {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+
     <h1 class="p-title">
-      {{fa-icon "info-circle" fixedWidth=true}} Info
+      {{fa-icon "info-circle" fixedWidth=true}} Container Info
     </h1>
     <div>
       <span class="p-key">Name:</span>
@@ -65,19 +68,15 @@
     {{#if container.description}}
       <h1 class="p-title">{{fa-icon "file" fixedWidth=true}} Description</h1>
       <p>
-        <i>{{container.description}}</i>
+        {{container.description}}
       </p>
     {{/if}}
 
     {{#if container.tags.length}}
-      <h1 class="p-title">{{fa-icon "labels" fixedWidth=true}} Tags</h1>
-      <ul>
-        {{#each container.tags as |tag|}}
-          <li>
-            {{tag}}
-          </li>
-        {{/each}}
-      </ul>
+      <h1 class="p-title">{{fa-icon "tags" fixedWidth=true}} Tags</h1>
+      {{#each container.tags as |tag|}}
+        <span class="tag">{{tag}}</span>
+      {{/each}}
     {{/if}}
 
     <h1 class="p-title">{{fa-icon "book" fixedWidth=true}} Playbooks</h1>
@@ -109,10 +108,10 @@
     </div>
 
     {{#if container.playbooksRan.length}}
-      <h1 class="p-title">{{fa-icon "history" fixedWidth=true}} Playbook Run History</h1>
+      <h1 class="p-title">{{fa-icon "history" fixedWidth=true}} Playbook Run Summary</h1>
       <div class="wrap-container">
         {{#each container.playbooksRan as |playbookRun|}}
-          <span class="playbook-container">
+          <div class="playbook-container">
                 {{playbookRun.playbookName}} (
             {{#if (gt playbookRun.successCount 0)}}
               <span style="color: green; font-weight: 500;">Succ {{playbookRun.successCount}}</span>
@@ -125,7 +124,7 @@
             {{#if (gt playbookRun.failureCount 0)}}
               <span style="color: red; font-weight: 500;">Fail {{playbookRun.failureCount}}</span>
             {{/if}})
-              </span>
+              </div>
         {{/each}}
       </div>
     {{/if}}
