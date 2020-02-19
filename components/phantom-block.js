@@ -26,7 +26,7 @@ polarity.export = PolarityComponent.extend({
         })
         .catch(function(err) {
           console.error(err);
-          self.setMessage(containerIndex, 'Error running playbook');
+          self.setMessage(containerIndex, err.title);
         });
     }
   },
