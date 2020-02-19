@@ -97,7 +97,7 @@ class Containers {
   _getContainerFromSearchResults(entity, { results }, next) {
     const ids = results.map(({ id }) => id);
 
-    this._getContainerResults(ids, (err, containers) => {
+    this._getContainerResults(ids, entity, (err, containers) => {
       if (err) return next({ err, detail: "Error getting Container Details" });
       if (!containers.length) {
         this.containers.push({ entity, containers: [] });
@@ -110,7 +110,7 @@ class Containers {
     });
   }
 
-  _getContainerResults(containerIds, callback) {
+  _getContainerResults(containerIds, entity, callback) {
     const containerHasBeenRequested = (containerId) => 
       this.containerResults.find((containerResult) => containerResult.id === containerId);
 
@@ -122,7 +122,6 @@ class Containers {
         this.logger.trace({ options: requestOptions }, "Request options for Containers Request");
 
         request(requestOptions, (err, resp, body) => {
-          
           if (!resp || resp.statusCode !== 200) {
             if (resp.statusCode == 404) {
               this.logger.info({ entity }, "Entity not in Phantom");

@@ -37,7 +37,10 @@
     {{#if (gt containerIndex 0)}}
       <hr>
     {{/if}}
-
+    <div class="container-name">
+      <span class="p-key">Name:</span>
+      <span class="p-value">{{container.name}}</span>
+    </div>
     <a class="p-link" href={{container.link}}>View in Phantom
       {{fa-icon "external-link-square" class="external-link-icon"}}</a>
 
@@ -120,24 +123,41 @@
     {{/if}}
     {{#if (eq container.__activeTab "history")}}
       {{#if container.playbooksRan.length}}
-        <h1 class="p-title">{{fa-icon "history" fixedWidth=true}} Playbook Run Summary</h1>
+        <h1 class="p-title">
+          {{fa-icon "history" fixedWidth=true}}
+          Playbook Run Summary ({{container.playbooksRan.length}})
+        </h1>
         <div class="wrap-container">
           {{#each container.playbooksRan as |playbookRun|}}
             <div class="playbook-container">
-              {{playbookRun.playbookName}} (
-              {{#if (gt playbookRun.successCount 0)}}
-                <span style="color: green; font-weight: 500;">Succ {{playbookRun.successCount}}</span>
-                {{if (or (gt playbookRun.pendingCount 0) (gt playbookRun.failureCount 0)) ","}}
-              {{/if}}
-              {{#if (gt playbookRun.pendingCount 0)}}
-                <span style="color: orange; font-weight: 500;">Pend {{playbookRun.pendingCount}}</span>
-                {{if (gt playbookRun.failureCount 0) ","}}
-              {{/if}}
-              {{#if (gt playbookRun.failureCount 0)}}
-                <span style="color: red; font-weight: 500;">Fail {{playbookRun.failureCount}}</span>
-              {{/if}})
+              <span class="playbook-name">{{playbookRun.playbookName}}</span>
+              <div>
+                <span class="p-key"> - Status:</span>
+                {{#if (eq playbookRun.status "success")}}
+                  <span class="p-value" style="color: green;">Success</span>
+                {{else}}
+                  {{#if (eq playbookRun.status "pending")}}
+                    <span class="p-value" style="color: orange;">Pending</span>
+                  {{else}} 
+                    <span class="p-value" style="color: red;">Failure</span>
+                  {{/if}}
+                {{/if}}
+              </div>
+              <div>
+                <span class="p-key"> - Date:</span>
+                <span class="p-value">{{playbookRun.date}}</span>
+              </div>
             </div>
           {{/each}}
+        </div>
+      {{else}}
+        <div>
+          <span class="p-key">Name:</span>
+          <span class="p-value">{{container.name}}</span>
+        </div>
+        <h1 class="p-title">{{fa-icon "history" fixedWidth=true}} Playbook Run Summary</h1>
+        <div class="wrap-container">
+          <span class="p-value">None</span>
         </div>
       {{/if}}
     {{/if}}

@@ -1,4 +1,5 @@
 let request = require("request");
+let moment = require("moment");
 let async = require("async");
 let ro = require("./request-options");
 let errorHandler = require("./error-handler");
@@ -26,7 +27,7 @@ class Playbooks {
       },
       200,
       (err, body) => {
-        if (err) 
+        if (err)
           return callback({ err, detail: "Error in getting List of Playbooks to Run" });
         callback(null, body);
       }
@@ -130,7 +131,8 @@ class Playbooks {
       return {
         playbookId: this.safeToInt(playbookRan.playbook),
         playbookName: playbookRunInfo.playbook.split("/").slice(-1)[0],
-        status: playbookRunInfo.status || "pending"
+        status: playbookRunInfo.status || "failure",
+        date: moment(playbookRan.update_time).format('MMM D YY, h:mm A')
       };
     });
   }
@@ -152,7 +154,7 @@ class Playbooks {
       unknownPlaybookRuns,
       (unknownPlaybookRun, next) => {
         const playbookNameFound = checkForPlaybookName(unknownPlaybookRun.playbookId);
-        if (playbookNameFound){
+        if (playbookNameFound) {
           unknownPlaybooksWithNames.push({ ...unknownPlaybookRun, ...playbookNameFound });
           return next();
         }
@@ -162,22 +164,29 @@ class Playbooks {
           (err, playbookId, playbookName) => {
             if (err) return next(err);
             this.playbookNames.push({ playbookId, playbookName });
-            unknownPlaybooksWithNames.push({ ...unknownPlaybookRun, playbookName });
+            unknownPlaybooksWithNames.push({
+              ...unknownPlaybookRun,
+              playbookName
+            });
             next();
           }
         );
       },
-      (err) =>
-        callback(err, 
-          [...knownPlaybookRuns, ...unknownPlaybooksWithNames]
-          .reduce(this.getDistinctPlaybookRuns, []))
+      (err) => {
+        this.logger.trace({ asdfasdfsdfds: [...knownPlaybookRuns, ...unknownPlaybooksWithNames] })
+        callback(
+          err,
+          [...knownPlaybookRuns, ...unknownPlaybooksWithNames].sort((a, b) =>
+            moment(new Date(b.date)).diff(moment(new Date(a.date)))
+          )
+        )
+      }
     );
   }
 
   getPlaybookName(playbookId, callback) {
     let requestOptions = {};
-    requestOptions.url =
-      this.options.host + "/rest/playbook/" + playbookId;
+    requestOptions.url = this.options.host + "/rest/playbook/" + playbookId;
     requestOptions.json = true;
 
     this.logger.trace(
