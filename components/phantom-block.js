@@ -19,7 +19,7 @@ polarity.export = PolarityComponent.extend({
 
       console.info(`sending message with cont id ${containerId} and playbook id ${playbookId}`);
 
-      this.sendIntegrationMessage({ data: { entity: this.block.entity, containerId, playbookId } })
+      this.sendIntegrationMessage({ data: { entityValue: this.block.entity.value, containerId, playbookId } })
         .then(function(/* response */) {
           self.setMessage(containerIndex, 'Success!');
         })
