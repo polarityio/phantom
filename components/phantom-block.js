@@ -12,7 +12,6 @@ polarity.export = PolarityComponent.extend({
     },
     runPlaybook: function(containerIndex, containerId, playbookId) {
       let self = this;
-      self.set('message', null);
 
       if (!playbookId) {
         return this.setMessage(containerIndex, 'Select a playbook to run.');
