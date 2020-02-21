@@ -165,7 +165,13 @@ class Containers {
           next();
         });
       },
-      (err) => callback(err, this._uniqueBy("id", this.containerResults))
+      (err) =>
+        callback(
+          err,
+          this._uniqueBy("id", this.containerResults).filter(({ id }) =>
+            containerIds.includes(id)
+          )
+        )
     );
   }
 
@@ -176,24 +182,24 @@ class Containers {
   }
 
   _formatContainers(entity, results, containers, containerPlaybookRuns, next) {
-    const associatedContainerIds = results.map(({ id }) => id);
     this.containers.push({
       entity,
-      containers: containers
-        .filter(({ id }) => associatedContainerIds.includes(id))
-        .map((container) => {
-          const playbooksRanInfo = containerPlaybookRuns.find(
-            ({ containerId }) => containerId === container.id
-          );
-          return {
-            ...container,
-            link: results.find(({ id }) => id == container.id).url,
-            playbooksRanCount: playbooksRanInfo.playbooksRanCount,
-            playbooksRan: playbooksRanInfo.playbooksRan
-          };
-        })
+      containers: containers.map((container) => {
+        const playbooksRanInfo = containerPlaybookRuns.find(
+          ({ containerId }) => containerId === container.id
+        );
+        return {
+          ...container,
+          link: results.find(({ id }) => id == container.id).url,
+          playbooksRanCount: playbooksRanInfo.playbooksRanCount,
+          playbooksRan: playbooksRanInfo.playbooksRan
+        };
+      })
     });
-    next();
+    next(
+      null,
+      this.containers.find((container) => container.entity.value === entity.value)
+    );
   }
 
   _getSummary(containers) {
@@ -209,10 +215,56 @@ class Containers {
   }
 
   createContainer(entityValue, callback) {
-    this._createContainerRequest(entityValue, (err, container) => {
-      if (err) return callback(err);
-      callback(null, container);
-    });
+    this._getContainerSearchResults(
+      { value: entityValue },
+      (err, containerSearchResults) => {
+        this.logger.trace(
+          { entityValue, containerSearchResults, err },
+          "IN createContainer"
+        );
+
+        if (err) return callback(err, null);
+        if (!containerSearchResults) {
+          this._createContainerRequest(entityValue, (err, container) => {
+            this._getCreatedContainer(entityValue, container.id, callback);
+          });
+        } else {
+          this._getCreatedContainer(
+            entityValue,
+            containerSearchResults.results[0].id,
+            callback
+          );
+        }
+      }
+    );
+  }
+
+  _getCreatedContainer(entityValue, containerId, callback) {
+    this._getContainerResults(
+      [containerId],
+      { value: entityValue },
+      (err, containers) => {
+        if (err) return callback({ err, detail: "Error getting Container Details" });
+
+        if (err) return callback(err);
+        this.playbooks.getPlaybookRunHistory(
+          [containerId],
+          (err, containerPlaybookRuns) => {
+            if (err)
+              return callback({
+                err,
+                detail: "Error getting Container Playbook History"
+              });
+
+            callback(null, {
+              ...containers[0],
+              ...containerPlaybookRuns[0],
+              link: `${this.integrationOptions.host}/browse`
+            });
+          }
+        );
+      }
+    );
   }
 
   _createContainerRequest(entityValue, callback) {

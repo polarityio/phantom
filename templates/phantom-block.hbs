@@ -29,9 +29,6 @@
             class="p-btn btn btn-light mt-1">Run Playbook
     </button>
   </div>
-  {{#if message.length}}
-    <span class="message">{{message}}</span>
-  {{/if}}
 {{else}}
   {{#each containers as |container containerIndex|}}
     {{#if (gt containerIndex 0)}}

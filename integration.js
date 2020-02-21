@@ -32,7 +32,7 @@ function runPlaybook(payload, integrationOptions, callback) {
   let containerId = payload.data.containerId;
   let actionId = payload.data.playbookId;
   let entityValue = payload.data.entityValue;
-
+  
   let playbooks = new Playbooks(Logger, integrationOptions);
   if (containerId) {
     playbooks.runPlaybookAgainstContainer(actionId, containerId, (err, resp) => {
@@ -55,7 +55,7 @@ function runPlaybook(payload, integrationOptions, callback) {
     });
   } else if (entityValue) {
     let containers = new Containers(Logger, integrationOptions);
-    containers.createContainer(entity, (err, container) => {
+    containers.createContainer(entityValue, (err, container) => {
       if (err) return callback({ err: "Failed to Create Container", detail: err });
       playbooks.runPlaybookAgainstContainer(actionId, container.id, (err, resp) => {
         Logger.trace({ resp, err }, "Result of playbook run");
@@ -67,10 +67,17 @@ function runPlaybook(payload, integrationOptions, callback) {
         playbooks.getPlaybookRunHistory([container.id], (error, playbooksRan) => {
           if (err || error) {
             Logger.trace({ playbooksRan, error }, "Failed to get Playbook Run History");
-            return callback(null, { err: err || error, ...playbooksRan[0] });
+            return callback(null, { err: err || error, ...playbooksRan[0], container });
           }
-
-          callback(null, { ...resp, ...playbooksRan[0] });
+          callback(null, {
+            ...resp,
+            ...playbooksRan[0],
+            container: {
+              ...container,
+              playbooksRan: playbooksRan[0].playbooksRan,
+              playbooksRanCount: playbooksRan[0].playbooksRan.length
+            }
+          });
         });
       });
     });
