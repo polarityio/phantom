@@ -47,7 +47,7 @@ class Playbooks {
         requestOptions.url = this.options.host + "/rest/playbook_run";
         requestOptions.qs = {
           _filter_container: this.safeToInt(containerId),
-          page_size: 20,
+          page_size: 1000,
           page: 0
         };
         requestOptions.json = true;
@@ -81,7 +81,13 @@ class Playbooks {
           });
         });
       },
-      (err) => callback(err, this.playbookRuns)
+      (err) =>
+        callback(
+          err,
+          this.playbookRuns.filter(({ containerId }) =>
+            containerIds.includes(containerId)
+          )
+        )
     );
   }
 
@@ -271,7 +277,12 @@ class Playbooks {
         (err, body) => {
           if (err) return callback(err, body);
           if (status == "failed")
-            return callback({ error: body, detail: "Playbook Run Failed", message: body.message }, body);
+            return callback({
+              error: body,
+              detail: "Playbook Run Failed",
+              message:
+                body.message[0] === "{" ? JSON.parse(body.message).message : body.message
+            });
           callback(null, body);
         }
       );

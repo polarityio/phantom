@@ -122,12 +122,12 @@
       </div>
     {{/if}}
     {{#if (eq container.__activeTab "history")}}
-      {{#if container.playbooksRan.length}}
-        <h1 class="p-title">
-          {{fa-icon "history" fixedWidth=true}}
-          Playbook Run Summary ({{container.playbooksRanCount}})
-        </h1>
-        <div class="wrap-container">
+      <h1 class="p-title">
+        {{fa-icon "history" fixedWidth=true}}
+        Playbook Run Summary ({{container.playbooksRanCount}})
+      </h1>
+      <div class="wrap-container">
+        {{#if container.playbooksRan.length}}
           {{#each container.playbooksRan as |playbookRun|}}
             <div class="playbook-container">
               <span class="playbook-name">{{playbookRun.playbookName}}</span>
@@ -153,17 +153,10 @@
             <a class="p-link" href={{container.link}}>
               ...{{fa-icon "external-link-square" class="external-link-icon"}}</a>
           {{/if}}
-        </div>
-      {{else}}
-        <div>
-          <span class="p-key">Name:</span>
-          <span class="p-value">{{container.name}}</span>
-        </div>
-        <h1 class="p-title">{{fa-icon "history" fixedWidth=true}} Playbook Run Summary</h1>
-        <div class="wrap-container">
+        {{else}}
           <span class="p-value">None</span>
-        </div>
-      {{/if}}
+        {{/if}}
+      </div>
     {{/if}}
   {{/each}}
 {{/if}}
