@@ -25,7 +25,7 @@ function startup(logger) {
 function runPlaybook(payload, integrationOptions, callback) {
   let containerId = payload.data.containerId;
   let actionId = payload.data.playbookId;
-  let entity = payload.data.entity;
+  let entityValue = payload.data.entityValue;
 
   let playbooks = new Playbooks(Logger, integrationOptions);
   if (containerId) {
@@ -36,9 +36,9 @@ function runPlaybook(payload, integrationOptions, callback) {
 
       callback(err, resp);
     });
-  } else if (entity) {
+  } else if (entityValue) {
     let containers = new Containers(Logger, integrationOptions);
-    containers.createContainer(entity, (err, container) => {
+    containers.createContainer(entityValue, (err, container) => {
       if (err) return callback({ err: 'Failed to Create Container', detail: err });
       playbooks.runPlaybookAgainstContainer(actionId, container.id, (err, resp) => {
         Logger.trace({ resp, err }, 'Result of playbook run');
