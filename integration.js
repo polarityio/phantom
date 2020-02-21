@@ -1,23 +1,20 @@
-let Containers = require("./containers");
-let validateOptions = require("./validator");
-let Playbooks = require("./playbooks");
+let Containers = require('./containers');
+let validateOptions = require('./validator');
+let Playbooks = require('./playbooks');
 
 let Logger;
 
 function doLookup(entities, { host, ..._options }, callback) {
-  let integrationOptions = { ..._options, host: host.endsWith("/") ? host.slice(0, -1) : host };
-  Logger.trace(
-    { entities, options: integrationOptions },
-    "Entities received by integration"
-  );
+  let integrationOptions = { ..._options, host: host.endsWith('/') ? host.slice(0, -1) : host };
+  Logger.trace({ entities, options: integrationOptions }, 'Entities received by integration');
 
   let containers = new Containers(Logger, integrationOptions);
 
   containers.lookupContainers(entities, (err, results) => {
     if (err) return callback(err, null);
 
-    Logger.trace({ results }, "Results sent to client");
-  
+    Logger.trace({ results }, 'Results sent to client');
+
     results.forEach((result) => {
       if (result && result.data && result.data.details)
         result.data.details.credentials = {
@@ -42,32 +39,30 @@ function runPlaybook(payload, integrationOptions, callback) {
   let playbooks = new Playbooks(Logger, integrationOptions);
   if (containerId) {
     playbooks.runPlaybookAgainstContainer(actionId, containerId, (err, resp) => {
-      Logger.trace({ resp, err }, "Result of playbook run");
+      Logger.trace({ resp, err }, 'Result of playbook run');
 
-      if (!resp && !err) 
-        Logger.error({ err: new Error("No response found!") }, "Error running playbook");
+      if (!resp && !err) Logger.error({ err: new Error('No response found!') }, 'Error running playbook');
 
       callback(err, resp);
     });
   } else if (entity) {
     let containers = new Containers(Logger, integrationOptions);
     containers.createContainer(entity, (err, container) => {
-      if (err) return callback({ err: "Failed to Create Container", detail: err })
+      if (err) return callback({ err: 'Failed to Create Container', detail: err });
       playbooks.runPlaybookAgainstContainer(actionId, container.id, (err, resp) => {
-        Logger.trace({ resp, err }, "Result of playbook run");
-        if (!resp && !err) 
-          Logger.error({ err: new Error("No response found!") }, "Error running playbook");
-          
+        Logger.trace({ resp, err }, 'Result of playbook run');
+        if (!resp && !err) Logger.error({ err: new Error('No response found!') }, 'Error running playbook');
+
         callback(err, resp);
       });
     });
   } else {
     const err = {
-      err: "Unexpected Error", 
-      detail: "Error: Unexpected value passed when trying to run a playbook"
-    }
-    Logger.error({ err, containerId, actionId, entity }, "Error running playbook");
-    callback(err)
+      err: 'Unexpected Error',
+      detail: 'Error: Unexpected value passed when trying to run a playbook'
+    };
+    Logger.error({ err, containerId, actionId, entity }, 'Error running playbook');
+    callback(err);
   }
 }
 
