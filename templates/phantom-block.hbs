@@ -14,18 +14,18 @@
 
   <h1 class="p-title">{{fa-icon "info-circle" fixedWidth=true}} Create Event and Run Playbook</h1>
 
-  <select class="w-100" size=5 onchange={{action (mut container.__selectedPlaybookId) value="target.value"}}>
-    {{#each details.playbooks as |playbook index|}}
+  <select class="w-100" size=5 onchange={{action (mut newEventPlaybookId) value="target.value"}}>
+    {{#each details.playbooks as |playbook|}}
       <option value="{{playbook.id}}">{{playbook.name}}</option>
     {{/each}}
   </select>
   <div class="d-flex flex-row justify-content-between align-items-center">
     <div>
-      {{#if container.__message}}
-        <span class="message">{{container.__message}}</span>
+      {{#if newEventMessage}}
+        <span class="message">{{newEventMessage}}</span>
       {{/if}}
     </div>
-    <button {{action "runPlaybook" containerIndex null container.__selectedPlaybookId}}
+    <button {{action "runPlaybook" null null newEventPlaybookId}}
             class="p-btn btn btn-light mt-1">Run Playbook
     </button>
   </div>
@@ -106,7 +106,7 @@
       {{/power-select}}
       --}}
       <select class="w-100" size=5 onchange={{action (mut container.__selectedPlaybookId) value="target.value"}}>
-        {{#each details.playbooks as |playbook index|}}
+        {{#each details.playbooks as | playbook |}}
           <option value="{{playbook.id}}">{{playbook.name}}</option>
         {{/each}}
       </select>
@@ -138,7 +138,7 @@
                 {{else}}
                   {{#if (eq playbookRun.status "pending")}}
                     <span class="p-value" style="color: orange;">Pending</span>
-                  {{else}} 
+                  {{else}}
                     <span class="p-value" style="color: red;">Failure</span>
                   {{/if}}
                 {{/if}}

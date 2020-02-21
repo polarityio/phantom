@@ -1,7 +1,8 @@
 polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias('block.data.details'),
   containers: Ember.computed.alias('details.results'),
-  message: '',
+  newEventMessage: '',
+  newEventPlaybookId: null,
   timezone: Ember.computed('Intl', function() {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
@@ -9,19 +10,18 @@ polarity.export = PolarityComponent.extend({
     changeTab: function(containerIndex, tabName) {
       this.set(`containers.${containerIndex}.__activeTab`, tabName);
     },
-    runPlaybook: function(containerIndex, containerId, playbookId, entity) {
+    runPlaybook: function(containerIndex, containerId, playbookId) {
       let self = this;
       self.set('message', null);
 
-      if(!playbookId){
+      if (!playbookId) {
         return this.setMessage(containerIndex, 'Select a playbook to run.');
       }
 
       console.info(`sending message with cont id ${containerId} and playbook id ${playbookId}`);
 
-      this.sendIntegrationMessage({ data: { containerId, playbookId, entity } })
+      this.sendIntegrationMessage({ data: { entity: this.block.entity, containerId, playbookId } })
         .then(function(/* response */) {
-          self.set('message', 'Success!');
           self.setMessage(containerIndex, 'Success!');
         })
         .catch(function(err) {
@@ -30,7 +30,11 @@ polarity.export = PolarityComponent.extend({
         });
     }
   },
-  setMessage(containerIndex, msg){
-    this.set(`containers.${containerIndex}.__message`, msg);
+  setMessage(containerIndex, msg) {
+    if (containerIndex) {
+      this.set(`containers.${containerIndex}.__message`, msg);
+    } else {
+      this.set('newEventMessage', msg);
+    }
   }
 });
