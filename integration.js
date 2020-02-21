@@ -14,15 +14,6 @@ function doLookup(entities, { host, ..._options }, callback) {
     if (err) return callback(err, null);
 
     Logger.trace({ results }, 'Results sent to client');
-
-    results.forEach((result) => {
-      if (result && result.data && result.data.details)
-        result.data.details.credentials = {
-          username: integrationOptions.username,
-          password: integrationOptions.password
-        };
-    });
-
     callback(err, results);
   });
 }
