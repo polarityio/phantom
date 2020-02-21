@@ -19,29 +19,42 @@ class Containers {
       this._getContainers(entities, (err, containers) => {
         if (err) return callback(err, null);
 
-         const lookupResults = containers.map(({ entity, containers }) => ({
-          entity,
-          data: 
-            containers.length
-              ? {
+        const lookupResults = containers.map(({ entity, containers }) => {
+          if (containers.length) {
+            return {
+              entity,
+              data: {
                 summary: this._getSummary(containers),
                 details: {
                   playbooks: playbooks.data,
                   results: containers
                 }
               }
-            : entity.requestContext.requestType === "OnDemand" 
-              ? { 
+            };
+          } else if (entity.requestContext.requestType === "OnDemand") {
+            // this was an OnDemand request for an entity with no results
+            return {
+              entity,
+              // do not cache this value because there is no data yet
+              isVolatile: true,
+              data: {
                 summary: ["New Event"],
                 details: {
-                  playbooks: playbooks.data, 
-                  onDemand: true, 
+                  playbooks: playbooks.data,
+                  onDemand: true,
                   entity: entity.value,
                   link: `${this.integrationOptions.host}/browse`
                 }
-              } 
-              : null
-        }));
+              }
+            };
+          } else {
+            // This was real-time request with no results so we cache it as a miss
+            return {
+              entity,
+              data: null
+            };
+          }
+        });
 
         callback(null, lookupResults);
       });
@@ -195,20 +208,20 @@ class Containers {
     );
   }
 
-  createContainer(entity, callback) {
-    this._createContainerRequest(entity, (err, container) => {
+  createContainer(entityValue, callback) {
+    this._createContainerRequest(entityValue, (err, container) => {
       if (err) return callback(err);
       callback(null, container);
     });
   }
 
-  _createContainerRequest(entity, callback) {
+  _createContainerRequest(entityValue, callback) {
     const requestOptions = ro.getRequestOptions(this.integrationOptions);
     requestOptions.url = this.integrationOptions.host + "/rest/container";
     requestOptions.method = "POST";
     requestOptions.body = {
       label: "events",
-      name: entity,
+      name: entityValue,
       sensitivity: "amber",
       severity: "medium",
       status: "new",
@@ -224,13 +237,13 @@ class Containers {
     request(requestOptions, (err, resp, body) => {
       if (!resp || resp.statusCode !== 200 || err || !body.success) {
         if (resp.statusCode == 404) {
-          this.logger.info({ entity }, "Entity not in Phantom");
-          this.containers.push({ entity, containers: [] });
+          this.logger.info({ entityValue }, "Entity not in Phantom");
+          this.containers.push({ entityValue, containers: [] });
           return callback();
         } else {
           this.logger.error(
-            { error: err, id, body },
-            "error creating container with value" + entity
+            { error: err, body },
+            `error creating container with value ${entityValue}`
           );
           return callback({ err: "Failed to Create Container", detail: err });
         }

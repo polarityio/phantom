@@ -20,15 +20,6 @@ function doLookup(entities, { host, ..._options }, callback) {
     if (err) return callback(err, null);
 
     Logger.trace({ results }, "Results sent to client");
-
-    results.forEach((result) => {
-      if (result && result.data && result.data.details)
-        result.data.details.credentials = {
-          username: integrationOptions.username,
-          password: integrationOptions.password
-        };
-    });
-
     callback(err, results);
   });
 }
@@ -40,7 +31,7 @@ function startup(logger) {
 function runPlaybook(payload, integrationOptions, callback) {
   let containerId = payload.data.containerId;
   let actionId = payload.data.playbookId;
-  let entity = payload.data.entity;
+  let entityValue = payload.data.entityValue;
 
   let playbooks = new Playbooks(Logger, integrationOptions);
   if (containerId) {
@@ -62,7 +53,7 @@ function runPlaybook(payload, integrationOptions, callback) {
         callback(null, { ...resp, ...playbooksRan[0] });
       });
     });
-  } else if (entity) {
+  } else if (entityValue) {
     let containers = new Containers(Logger, integrationOptions);
     containers.createContainer(entity, (err, container) => {
       if (err) return callback({ err: "Failed to Create Container", detail: err });

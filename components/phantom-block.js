@@ -1,6 +1,8 @@
 polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias("block.data.details"),
   containers: Ember.computed.alias("details.results"),
+  newEventMessage: "",
+  newEventPlaybookId: null,
   timezone: Ember.computed("Intl", function() {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
@@ -8,7 +10,7 @@ polarity.export = PolarityComponent.extend({
     changeTab: function(containerIndex, tabName) {
       this.set(`containers.${containerIndex}.__activeTab`, tabName);
     },
-    runPlaybook: function(containerIndex, containerId, playbookId, entity) {
+    runPlaybook: function(containerIndex, containerId, playbookId) {
       let self = this;
 
       if (!playbookId)
@@ -34,7 +36,8 @@ polarity.export = PolarityComponent.extend({
     }
   },
   setMessage(containerIndex, msg) {
-    this.set(`containers.${containerIndex}.__message`, msg);
+    if (containerIndex) this.set(`containers.${containerIndex}.__message`, msg);
+    else this.set("newEventMessage", msg);
   },
   setPlaybookRunHistory(containerIndex, playbooksRan, playbooksRanCount) {
     this.set(`containers.${containerIndex}.playbooksRan`, playbooksRan);
