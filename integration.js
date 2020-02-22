@@ -14,13 +14,54 @@ function doLookup(entities, { host, ..._options }, callback) {
     "Entities received by integration"
   );
 
-  let containers = new Containers(Logger, integrationOptions);
+  let phantomPlaybooks = new Playbooks(Logger, integrationOptions);
+  let phantomContainers = new Containers(Logger, integrationOptions);
 
-  containers.lookupContainers(entities, (err, results) => {
+  phantomContainers.getContainers(entities, (err, containers) => {
     if (err) return callback(err, null);
 
-    Logger.trace({ results }, "Results sent to client");
-    callback(err, results);
+    phantomPlaybooks.listPlaybooks((err, playbooks) => {
+      if (err) return callback(err, null);
+
+      const lookupResults = containers.map(({ entity, containers }) => {
+        if (containers.length) {
+          return {
+            entity,
+            data: {
+              summary: phantomContainers.getSummary(containers),
+              details: {
+                playbooks: playbooks.data,
+                results: containers
+              }
+            }
+          };
+        } else if (entity.requestContext.requestType === "OnDemand") {
+          // this was an OnDemand request for an entity with no results
+          return {
+            entity,
+            // do not cache this value because there is no data yet
+            isVolatile: true,
+            data: {
+              summary: ["New Event"],
+              details: {
+                playbooks: playbooks.data,
+                onDemand: true,
+                entity: entity.value,
+                link: `${integrationOptions.host}/browse`
+              }
+            }
+          };
+        } else {
+          // This was real-time request with no results so we cache it as a miss
+          return {
+            entity,
+            data: null
+          };
+        }
+      });
+
+      callback(null, lookupResults);
+    });
   });
 }
 
@@ -32,55 +73,19 @@ function runPlaybook(payload, integrationOptions, callback) {
   let containerId = payload.data.containerId;
   let actionId = payload.data.playbookId;
   let entityValue = payload.data.entityValue;
-  
-  let playbooks = new Playbooks(Logger, integrationOptions);
+
+  let phantomPlaybooks = new Playbooks(Logger, integrationOptions);
+
   if (containerId) {
-    playbooks.runPlaybookAgainstContainer(actionId, containerId, (err, resp) => {
-      Logger.trace({ resp, err }, "Result of playbook run");
-
-      if (!resp && !err)
-        Logger.error({ err: new Error("No response found!") }, "Error running playbook");
-
-      playbooks.getPlaybookRunHistory([containerId], (error, playbooksRan) => {
-        if (err || error) {
-          Logger.trace(
-            { playbooksRan, error, err },
-            "Failed to get Playbook Run History"
-          );
-          return callback(null, { err: err || error, ...playbooksRan[0] });
-        }
-
-        callback(null, { ...resp, ...playbooksRan[0] });
-      });
-    });
+    _runPlaybookOnExistingContainer(containerId, actionId, phantomPlaybooks, callback);
   } else if (entityValue) {
-    let containers = new Containers(Logger, integrationOptions);
-    containers.createContainer(entityValue, (err, container) => {
-      if (err) return callback({ err: "Failed to Create Container", detail: err });
-      playbooks.runPlaybookAgainstContainer(actionId, container.id, (err, resp) => {
-        Logger.trace({ resp, err }, "Result of playbook run");
-        if (!resp && !err)
-          Logger.error(
-            { err: new Error("No response found!") },
-            "Error running playbook"
-          );
-        playbooks.getPlaybookRunHistory([container.id], (error, playbooksRan) => {
-          if (err || error) {
-            Logger.trace({ playbooksRan, error }, "Failed to get Playbook Run History");
-            return callback(null, { err: err || error, ...playbooksRan[0], container });
-          }
-          callback(null, {
-            ...resp,
-            ...playbooksRan[0],
-            container: {
-              ...container,
-              playbooksRan: playbooksRan[0].playbooksRan,
-              playbooksRanCount: playbooksRan[0].playbooksRan.length
-            }
-          });
-        });
-      });
-    });
+    _createContainerAndRunPlaybook(
+      entityValue,
+      integrationOptions,
+      actionId,
+      phantomPlaybooks,
+      callback
+    );
   } else {
     const err = {
       err: "Unexpected Error",
@@ -89,6 +94,76 @@ function runPlaybook(payload, integrationOptions, callback) {
     Logger.error({ err, containerId, actionId, entity }, "Error running playbook");
     callback(err);
   }
+}
+
+const _runPlaybookOnExistingContainer = (
+  containerId,
+  actionId,
+  phantomPlaybooks,
+  callback
+) =>
+  phantomPlaybooks.runPlaybookAgainstContainer(actionId, containerId, (err, resp) => {
+    Logger.trace({ resp, err }, "Result of playbook run");
+
+    if (!resp && !err)
+      Logger.error({ err: new Error("No response found!") }, "Error running playbook");
+
+    phantomPlaybooks.getPlaybookRunHistory([containerId], (error, playbooksRan) => {
+      if (err || error) {
+        Logger.trace({ playbooksRan, error, err }, "Failed to get Playbook Run History");
+        return callback(null, {
+          err: err || error,
+          ...playbooksRan[0],
+          newContainer: false
+        });
+      }
+
+      callback(null, { ...resp, ...playbooksRan[0], newContainer: false });
+    });
+  });
+
+function _createContainerAndRunPlaybook(
+  entityValue,
+  integrationOptions,
+  actionId,
+  phantomPlaybooks,
+  callback
+) {
+  let containers = new Containers(Logger, integrationOptions);
+  containers.createContainer(entityValue, (err, container) => {
+    if (err) return callback({ err: "Failed to Create Container", detail: err });
+
+    phantomPlaybooks.runPlaybookAgainstContainer(actionId, container.id, (err, resp) => {
+      Logger.trace({ resp, err }, "Result of playbook run");
+      if (!resp && !err)
+      Logger.error({ err: new Error("No response found!") }, "Error running playbook");
+      
+      phantomPlaybooks.getPlaybookRunHistory([container.id], (error, playbooksRan) => {
+        Logger.trace({ playbooksRan, error }, "Result of playbook run history");
+        if (err || error) {
+          Logger.trace({ playbooksRan, error }, "Failed to get Playbook Run History");
+          return callback(null, {
+            err: err || error,
+            ...playbooksRan[0],
+            newContainer: {
+              ...container,
+              playbooksRan: playbooksRan && playbooksRan[0].playbooksRan,
+              playbooksRanCount: playbooksRan && playbooksRan[0].playbooksRan.length
+            }
+          });
+        }
+        callback(null, {
+          ...resp,
+          ...playbooksRan[0],
+          newContainer: {
+            ...container,
+            playbooksRan: playbooksRan[0].playbooksRan,
+            playbooksRanCount: playbooksRan[0].playbooksRan.length
+          }
+        });
+      });
+    });
+  });
 }
 
 module.exports = {

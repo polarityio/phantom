@@ -183,9 +183,6 @@ class Playbooks {
         );
       },
       (err) => {
-        this.logger.trace({
-          asdfasdfsdfds: [...knownPlaybookRuns, ...unknownPlaybooksWithNames]
-        });
         callback(
           err,
           [...knownPlaybookRuns, ...unknownPlaybooksWithNames].sort((a, b) =>

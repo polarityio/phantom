@@ -24,9 +24,11 @@ polarity.export = PolarityComponent.extend({
         .sendIntegrationMessage({
           data: { entityValue: this.get("details.entity"), containerId, playbookId }
         })
-        .then(({ err, playbooksRan, playbooksRanCount, container }) => {
-          if (container) self.setContainer(container);
-          else
+        .then(({ err, playbooksRan, playbooksRanCount, newContainer }) => {
+          if (newContainer) {
+            self.setContainer(newContainer);
+            containerIndex = 0;
+          } else
             self.setPlaybookRunHistory(containerIndex, playbooksRan, playbooksRanCount);
 
           if (err)
@@ -41,7 +43,7 @@ polarity.export = PolarityComponent.extend({
   },
 
   setMessage(containerIndex, msg) {
-    this.set(`containers.${containerIndex || 0}.__message`, msg);
+    this.set(`containers.${containerIndex}.__message`, msg);
   },
 
   setPlaybookRunHistory(containerIndex, playbooksRan, playbooksRanCount) {
@@ -49,8 +51,8 @@ polarity.export = PolarityComponent.extend({
     this.set(`containers.${containerIndex}.playbooksRanCount`, playbooksRanCount);
   },
 
-  setContainer(container) {
-    this.set(`containers`, [container]);
+  setContainer(newContainer) {
+    this.set(`containers`, [newContainer]);
     this.set(`details.onDemand`, false);
   }
 });

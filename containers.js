@@ -12,56 +12,7 @@ class Containers {
     this.containerResults = [];
   }
 
-  lookupContainers(entities, callback) {
-    this.playbooks.listPlaybooks((err, playbooks) => {
-      if (err) return callback(err, null);
-
-      this._getContainers(entities, (err, containers) => {
-        if (err) return callback(err, null);
-
-        const lookupResults = containers.map(({ entity, containers }) => {
-          if (containers.length) {
-            return {
-              entity,
-              data: {
-                summary: this._getSummary(containers),
-                details: {
-                  playbooks: playbooks.data,
-                  results: containers
-                }
-              }
-            };
-          } else if (entity.requestContext.requestType === "OnDemand") {
-            // this was an OnDemand request for an entity with no results
-            return {
-              entity,
-              // do not cache this value because there is no data yet
-              isVolatile: true,
-              data: {
-                summary: ["New Event"],
-                details: {
-                  playbooks: playbooks.data,
-                  onDemand: true,
-                  entity: entity.value,
-                  link: `${this.integrationOptions.host}/browse`
-                }
-              }
-            };
-          } else {
-            // This was real-time request with no results so we cache it as a miss
-            return {
-              entity,
-              data: null
-            };
-          }
-        });
-
-        callback(null, lookupResults);
-      });
-    });
-  }
-
-  _getContainers(entities, callback) {
+  getContainers(entities, callback) {
     async.each(
       entities,
       (entity, next) =>
@@ -202,7 +153,7 @@ class Containers {
     );
   }
 
-  _getSummary(containers) {
+  getSummary(containers) {
     return containers.reduce(
       (agg, container) => [
         ...agg,
