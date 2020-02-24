@@ -1,9 +1,13 @@
 polarity.export = PolarityComponent.extend({
-  details: Ember.computed.alias("block.data.details"),
-  containers: Ember.computed.alias("details.results"),
-  newEventMessage: "",
+  details: Ember.computed.alias('block.data.details'),
+  containers: Ember.computed.alias('details.results'),
+  onDemand: Ember.computed('block.entity.requestContext.requestType', function() {
+    return this.block.entity.requestContext.requestType === 'OnDemand';
+  }),
+  newEventMessage: '',
   newEventPlaybookId: null,
-  timezone: Ember.computed("Intl", function() {
+  isRunning: false,
+  timezone: Ember.computed('Intl', function() {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
   actions: {
@@ -13,37 +17,51 @@ polarity.export = PolarityComponent.extend({
     runPlaybook: function(containerIndex, containerId, playbookId) {
       let self = this;
 
-      if (!playbookId)
-        return self.setMessage(containerIndex, "Select a playbook to run.");
+      console.info(`runPlaybook index: ${containerIndex}, containerId: ${containerId}, playbookId: ${playbookId} `);
 
-      console.info(
-        `sending message with cont id ${containerId} and playbook id ${playbookId}`
-      );
+      if (!playbookId) return self.setMessage(containerIndex, 'Select a playbook to run.');
+
+      console.info(`sending message with cont id ${containerId} and playbook id ${playbookId}`);
+
+      this.setMessage(containerIndex, '');
+      this.setRunning(containerIndex, true);
+      this.get('block').notifyPropertyChange('data');
 
       self
         .sendIntegrationMessage({
-          data: { entityValue: this.get("details.entity"), containerId, playbookId }
+          data: { entityValue: this.block.entity.value, containerId, playbookId }
         })
         .then(({ err, playbooksRan, playbooksRanCount, newContainer }) => {
+          console.info('Done running playbook');
           if (newContainer) {
             self.setContainer(newContainer);
             containerIndex = 0;
-          } else
+          } else {
             self.setPlaybookRunHistory(containerIndex, playbooksRan, playbooksRanCount);
+          }
 
-          if (err)
+          if (err) {
             self.setMessage(containerIndex, `Run Failed: ${err.message || err.title}`);
-          else self.setMessage(containerIndex, "Success!");
+          } else {
+            self.setMessage(containerIndex, 'Successfully completed Playbook');
+          }
         })
-        .catch(function(err) {
-          console.error(err);
-          self.setMessage(containerIndex, err.message || err.title);
+        .catch((err) => {
+          self.setErrorMessage(containerIndex, err.message || err.title);
+        })
+        .finally(() => {
+          self.setRunning(containerIndex, false);
+          self.get('block').notifyPropertyChange('data');
         });
     }
   },
 
   setMessage(containerIndex, msg) {
-    this.set(`containers.${containerIndex}.__message`, msg);
+    if (Number.isInteger(containerIndex)) {
+      this.set(`containers.${containerIndex}.__message`, msg);
+    } else {
+      this.set('newEventMessage', msg);
+    }
   },
 
   setPlaybookRunHistory(containerIndex, playbooksRan, playbooksRanCount) {
@@ -53,6 +71,23 @@ polarity.export = PolarityComponent.extend({
 
   setContainer(newContainer) {
     this.set(`containers`, [newContainer]);
-    this.set(`details.onDemand`, false);
+  },
+
+  setErrorMessage(containerIndex, msg) {
+    if (Number.isInteger(containerIndex)) {
+      this.set(`containers.${containerIndex}.__errorMessage`, msg);
+    } else {
+      this.set('newEventErrorMessage', msg);
+    }
+  },
+
+  setRunning(containerIndex, isRunning) {
+    console.info(`Set isRunning, index:${containerIndex} isRunning:${isRunning}`);
+    if (Number.isInteger(containerIndex)) {
+      console.info('SETTING INDEX TO RUNNING');
+      this.set(`containers.${containerIndex}.__running`, isRunning);
+    } else {
+      this.set('isRunning', isRunning);
+    }
   }
 });

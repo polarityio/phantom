@@ -1,4 +1,4 @@
-{{#if (and details.onDemand details.entity)}}
+{{#if (and onDemand (not containers))}}
   <h1 class="p-title">{{fa-icon "info-circle" fixedWidth=true}} Info</h1>
   <div>
     <span class="p-key">Name: </span>
@@ -21,14 +21,24 @@
   </select>
   <div class="d-flex flex-row justify-content-between align-items-center">
     <div>
-      {{#if newEventMessage}}
-        <span class="message">{{newEventMessage}}</span>
+      {{#if isRunning}}
+        {{fa-icon "spinner-third" fixedWidth=true spin=true}} Running
       {{/if}}
     </div>
     <button {{action "runPlaybook" null null newEventPlaybookId}}
-            class="p-btn btn btn-light mt-1">Run Playbook
+            class="p-btn btn btn-light mt-1">Create Event & Run
     </button>
   </div>
+  {{#if newEventMessage}}
+    <div class="alert alert-info mt-1">
+      {{newEventMessage}}
+    </div>
+  {{/if}}
+  {{#if newEventErrorMessage}}
+    <div class="alert alert-danger mt-1">
+      {{newEventErrorMessage}}
+    </div>
+  {{/if}}
 {{else}}
   {{#each containers as |container containerIndex|}}
     {{#if (gt containerIndex 0)}}
@@ -43,11 +53,14 @@
 
     <ul class="nav nav-tabs mt-2">
       <li class="nav-item">
-        <a {{action "changeTab" containerIndex "info"}} class="nav-link  {{if (or (eq container.__activeTab "info")(not container.__activeTab)) "active"}}" href="#">Info</a>
+        <a {{action "changeTab" containerIndex "info"}}
+                class="nav-link  {{if (or (eq container.__activeTab "info")(not container.__activeTab)) "active"}}"
+                href="#">Info</a>
       </li>
       <li class="nav-item">
-        <a {{action "changeTab" containerIndex "history"}} class="nav-link {{if (eq container.__activeTab "history") "active"}}" href="#">Playbook
-          History</a>
+        <a {{action "changeTab" containerIndex "history"}}
+                class="nav-link {{if (eq container.__activeTab "history") "active"}}" href="#">Playbook
+          History ({{container.playbooksRan.length}})</a>
       </li>
     </ul>
 
@@ -109,36 +122,38 @@
       </select>
       <div class="d-flex flex-row justify-content-between align-items-center">
         <div>
-          {{#if container.__message}}
-            <span class="message">{{container.__message}}</span>
+          {{#if container.__running}}
+            {{fa-icon "spinner-third" fixedWidth=true spin=true}} Running
           {{/if}}
         </div>
         <button {{action "runPlaybook" containerIndex container.id container.__selectedPlaybookId}}
                 class="p-btn btn btn-light mt-1">Run Playbook
         </button>
       </div>
+      {{#if container.__message}}
+        <div class="alert alert-info mt-1">
+          {{container.__message}}
+        </div>
+      {{/if}}
+      {{#if container.__errorMessage}}
+        <div class="alert alert-danger mt-1">
+          {{container.__errorMessage}}
+        </div>
+      {{/if}}
     {{/if}}
     {{#if (eq container.__activeTab "history")}}
       <h1 class="p-title">
         {{fa-icon "history" fixedWidth=true}}
-        Playbook Run Summary ({{container.playbooksRanCount}})
+        Playbook Run History ({{container.playbooksRanCount}})
       </h1>
       <div class="wrap-container">
         {{#if container.playbooksRan.length}}
           {{#each container.playbooksRan as |playbookRun|}}
             <div class="playbook-container">
-              <span class="playbook-name">{{playbookRun.playbookName}}</span>
+              <span class="p-title">{{playbookRun.playbookName}}</span>
               <div>
                 <span class="p-key"> - Status:</span>
-                {{#if (eq playbookRun.status "success")}}
-                  <span class="p-value" style="color: green;">Success</span>
-                {{else}}
-                  {{#if (eq playbookRun.status "pending")}}
-                    <span class="p-value" style="color: orange;">Pending</span>
-                  {{else}}
-                    <span class="p-value" style="color: red;">Failure</span>
-                  {{/if}}
-                {{/if}}
+                <span class="p-value {{playbookRun.status}}">{{capitalize playbookRun.status}}</span>
               </div>
               <div>
                 <span class="p-key"> - Date:</span>
@@ -148,7 +163,8 @@
           {{/each}}
           {{#if (gt container.playbooksRanCount container.playbooksRan.length)}}
             <a class="p-link" href={{container.link}}>
-              ...{{fa-icon "external-link-square" class="external-link-icon"}}</a>
+              {{container.additionalPlaybooks}} additional playbook runs {{fa-icon "external-link-square" class="external-link-icon"}}
+            </a>
           {{/if}}
         {{else}}
           <span class="p-value">None</span>
