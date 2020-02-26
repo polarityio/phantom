@@ -1,19 +1,20 @@
 {
   "main": "./integration.js",
   "name": "phantom",
-  "version": "3.0.1-beta",
+  "version": "3.1.3-beta",
   "private": true,
   "license": "MIT",
   "author": "Polarity",
   "dependencies": {
-    "request": "^2.88",
-    "async": "^2.6"
+    "async": "^2.6",
+    "moment": "^2.24.0",
+    "request": "^2.88"
   },
   "devDependencies": {
     "bunyan": "^1.8.12",
     "chai": "^4.1.2",
-    "mocha": "~3.2",
-    "mountebank": "^1.13.0",
+    "mocha": "^7.0.1",
+    "mountebank": "^2.2.0",
     "node-ssh": "^5.0.0",
     "node-watch": "^0.5.5",
     "scp2": "^0.5.0"
