@@ -4,8 +4,17 @@
 
 Polarity's Phantom integration allows automated queries against Phantom's container and artifact database, create containers from entities, and allows a user to execute pre-defined playbooks from the Polarity overlay window.
 
-<img width="400" alt="phantomInt" src="https://user-images.githubusercontent.com/22529325/53601678-a44bf100-3b7a-11e9-9a87-c29970c127c5.gif">
-<img width="400" alt="Integration Example" src="./assets/integration-example.png">
+## Normal Event with Playbook History
+<div style="display:flex; justify-content:center; align-items:center;">
+  <img width="400" alt="Integration Example Event Info" src="./assets/integration-example-event-info.png">
+  <img width="400" alt="Integration Example Event History" src="./assets/integration-example-event-history.png">
+</div>
+
+## Create New Event
+<div style="display:flex; justify-content:center; align-items:center;">
+  <img width="400" alt="Integration Example New Event" src="./assets/integration-example-new-event.png">
+  <img width="400" alt="Integration Example New Event Created" src="./assets/integration-example-new-event-created.png">
+</div>
 
 To learn more about Phantom, visit the [official website](https://www.phantom.us).
 
