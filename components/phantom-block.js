@@ -17,11 +17,9 @@ polarity.export = PolarityComponent.extend({
     runPlaybook: function(containerIndex, containerId, playbookId) {
       let self = this;
 
-      console.info(`runPlaybook index: ${containerIndex}, containerId: ${containerId}, playbookId: ${playbookId} `);
+      //console.info(`runPlaybook index: ${containerIndex}, containerId: ${containerId}, playbookId: ${playbookId} `);
 
       if (!playbookId) return self.setMessage(containerIndex, 'Select a playbook to run.');
-
-      console.info(`sending message with cont id ${containerId} and playbook id ${playbookId}`);
 
       this.setMessage(containerIndex, '');
       this.setRunning(containerIndex, true);
@@ -32,7 +30,6 @@ polarity.export = PolarityComponent.extend({
           data: { entityValue: this.block.entity.value, containerId, playbookId }
         })
         .then(({ err, playbooksRan, playbooksRanCount, newContainer }) => {
-          console.info('Done running playbook');
           if (newContainer) {
             self.setContainer(newContainer);
             containerIndex = 0;
@@ -82,9 +79,7 @@ polarity.export = PolarityComponent.extend({
   },
 
   setRunning(containerIndex, isRunning) {
-    console.info(`Set isRunning, index:${containerIndex} isRunning:${isRunning}`);
     if (Number.isInteger(containerIndex)) {
-      console.info('SETTING INDEX TO RUNNING');
       this.set(`containers.${containerIndex}.__running`, isRunning);
     } else {
       this.set('isRunning', isRunning);
