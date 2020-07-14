@@ -1,12 +1,16 @@
 let config = require('./config/config');
 const fs = require('fs');
 
+let requestOptions;
+
 function getRequestOptions(options) {
+    if (requestOptions) return requestOptions;
+
     const {
         request: { ca, cert, key, passphrase, rejectUnauthorized, proxy }
     } = config;
     
-    return {
+    requestOptions = {
         headers: { 'ph-auth-token': options.token },
         ...(_configFieldIsValid(ca) && { ca: fs.readFileSync(ca) }),
         ...(_configFieldIsValid(cert) && { cert: fs.readFileSync(cert) }),
@@ -16,6 +20,8 @@ function getRequestOptions(options) {
         ...(typeof rejectUnauthorized === 'boolean' && { rejectUnauthorized }),
         json: true
     };
+
+    return requestOptions;
 }
 
 const _configFieldIsValid = (field) =>
