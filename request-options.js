@@ -4,7 +4,11 @@ const fs = require('fs');
 let requestOptions;
 
 function getRequestOptions(options) {
-    if (requestOptions) return requestOptions;
+    if (requestOptions) 
+        return {
+            ...requestOptions,
+            headers: { 'ph-auth-token': options.token }
+        };
 
     const {
         request: { ca, cert, key, passphrase, rejectUnauthorized, proxy }
