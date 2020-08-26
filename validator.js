@@ -30,7 +30,7 @@ function validateOptions(options, callback) {
     fp.split(','),
     fp.map(fp.trim),
     fp.some(fp.includes(' '))
-  )(options.programsToSearch.value)
+  )(options.playbookLabels.value)
     ? {
         key: 'playbookLabels',
         message: 'Playbook Labels are not allowed to include spaces.'
