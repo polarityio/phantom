@@ -29,6 +29,10 @@ The Server URL where the Phantom API instance is located.  The Server URL should
 
 The API token to use to authenticate with the Phantom server.  See the official documentation for instructions on setting up an API token.
 
+### Playbook Labels
+
+A comma separated list of Playbook Labels you want to search by in Phantom. By adding labels, you expand the amount of playbooks you can run on containers found.
+
 ## Installation Instructions
 
 Installation instructions for integrations are provided on the [PolarityIO GitHub Page](https://polarityio.github.io/).

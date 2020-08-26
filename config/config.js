@@ -66,10 +66,10 @@ module.exports = {
      * to the servers without valid SSL certificates.  Please note that we do NOT recommending setting this
      * to false in a production environment.
      */
-    rejectUnauthorized: true
+    rejectUnauthorized: false
   },
   logging: {
-    level: 'info' //trace, debug, info, warn, error, fatal
+    level: 'trace' //trace, debug, info, warn, error, fatal
   },
   /**
    * Options that are displayed to the user/admin in the Polarity integration user-interface.  Should be structured
@@ -95,6 +95,16 @@ module.exports = {
       default: '',
       type: 'password',
       userCanEdit: true,
+      adminOnly: false
+    },
+    {
+      key: 'playbookLabels',
+      name: 'Playbook Labels',
+      description:
+        'A comma separated list of Playbook Labels you want to search by in Phantom. By adding labels, you expand the amount of playbooks you can run on containers found.',
+      default: 'events',
+      type: 'text',
+      userCanEdit: false,
       adminOnly: false
     }
   ]

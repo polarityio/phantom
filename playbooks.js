@@ -1,10 +1,12 @@
 let request = require('request');
 let moment = require('moment');
 let async = require('async');
+let fp = require('lodash/fp');
+
 let ro = require('./request-options');
 let errorHandler = require('./error-handler');
 
-const NUM_PLAYBOOKS_TO_DISPLAY = 20;
+const NUM_PLAYBOOKS_TO_DISPLAY = 100;
 
 class Playbooks {
   constructor(logger, options) {
@@ -13,22 +15,26 @@ class Playbooks {
     this.requestWithDefaults = errorHandler(request.defaults(ro.getRequestOptions(this.options)));
     this.playbookRuns = [];
     this.playbookNames = [];
+    this.playbookLabels = fp.flow(fp.split, fp.map(fp.trim))(options.playbookLabels);
   }
 
-  listPlaybooks(callback) {
+  listPlaybooks(callback, playbookLabels = this.playbookLabels, previousResults = []) {
     this.requestWithDefaults(
       {
         url: `${this.options.host}/rest/playbook`,
         qs: {
-          _filter_labels__contains: "'events'", // TODO update this if you add more event types
+          _filter_labels__contains: `'${playbookLabels[0]}'`,
           _exclude_category: "'deprecated'"
         },
         method: 'GET'
       },
       200,
       (err, body) => {
+        if (playbookLabels.length > 1) 
+          return this.listPlaybooks(callback, playbookLabels.slice(1), previousResults.concat(body));
+        
         if (err) return callback({ err, detail: 'Error in getting List of Playbooks to Run' });
-        callback(null, body);
+        callback(null, previousResults.concat(body));
       }
     );
   }
@@ -74,7 +80,11 @@ class Playbooks {
           });
         });
       },
-      (err) => callback(err, this.playbookRuns.filter(({ containerId }) => containerIds.includes(containerId)))
+      (err) =>
+        callback(
+          err,
+          this.playbookRuns.filter(({ containerId }) => containerIds.includes(containerId))
+        )
     );
   }
 
@@ -88,8 +98,8 @@ class Playbooks {
         ...(playbookRun.status === 'success'
           ? { successCount: agg[existingPlaybookRunIndex].successCount + 1 }
           : playbookRun.status === 'failure'
-            ? { failureCount: agg[existingPlaybookRunIndex].failureCount + 1 }
-            : { pendingCount: agg[existingPlaybookRunIndex].pendingCount + 1 })
+          ? { failureCount: agg[existingPlaybookRunIndex].failureCount + 1 }
+          : { pendingCount: agg[existingPlaybookRunIndex].pendingCount + 1 })
       },
       ...agg.slice(existingPlaybookRunIndex + 1)
     ];
@@ -104,8 +114,8 @@ class Playbooks {
         ...(playbookRun.status === 'success'
           ? { successCount: 1 }
           : playbookRun.status === 'failure'
-            ? { failureCount: 1 }
-            : { pendingCount: 1 })
+          ? { failureCount: 1 }
+          : { pendingCount: 1 })
       }
     ];
 
