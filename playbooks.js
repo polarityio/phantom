@@ -15,10 +15,13 @@ class Playbooks {
     this.requestWithDefaults = errorHandler(request.defaults(ro.getRequestOptions(this.options)));
     this.playbookRuns = [];
     this.playbookNames = [];
-    this.playbookLabels = fp.flow(fp.split, fp.map(fp.trim))(options.playbookLabels);
+    this.playbookLabels = fp.flow(fp.split(','), fp.map(fp.trim))(options.playbookLabels);
   }
 
-  listPlaybooks(callback, playbookLabels = this.playbookLabels, previousResults = []) {
+  listPlaybooks(callback, playbookLabels, previousResults = []) {
+    if (!playbookLabels) {
+      playbookLabels = this.playbookLabels
+    }
     this.requestWithDefaults(
       {
         url: `${this.options.host}/rest/playbook`,
@@ -31,10 +34,10 @@ class Playbooks {
       200,
       (err, body) => {
         if (playbookLabels.length > 1) 
-          return this.listPlaybooks(callback, playbookLabels.slice(1), previousResults.concat(body));
+          return this.listPlaybooks(callback, playbookLabels.slice(1), previousResults.concat(body.data));
         
         if (err) return callback({ err, detail: 'Error in getting List of Playbooks to Run' });
-        callback(null, previousResults.concat(body));
+        callback(null, previousResults.concat(body.data));
       }
     );
   }

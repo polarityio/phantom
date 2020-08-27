@@ -27,7 +27,7 @@ function doLookup(entities, { host, ..._options }, callback) {
             data: {
               summary: phantomContainers.getSummary(containers),
               details: {
-                playbooks: playbooks.data,
+                playbooks,
                 results: containers
               }
             }
@@ -41,7 +41,7 @@ function doLookup(entities, { host, ..._options }, callback) {
             data: {
               summary: ['No Events Found'],
               details: {
-                playbooks: playbooks.data,
+                playbooks,
                 onDemand: true,
                 entity: entity.value,
                 link: `${integrationOptions.host}/browse`
