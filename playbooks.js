@@ -2,6 +2,11 @@ let request = require('request');
 let moment = require('moment');
 let async = require('async');
 let fp = require('lodash/fp');
+const NodeCache = require('node-cache');
+
+const playbooksCache = new NodeCache({
+  stdTTL: 2 * 60
+});
 
 let ro = require('./request-options');
 let errorHandler = require('./error-handler');
@@ -15,29 +20,45 @@ class Playbooks {
     this.requestWithDefaults = errorHandler(request.defaults(ro.getRequestOptions(this.options)));
     this.playbookRuns = [];
     this.playbookNames = [];
-    this.playbookLabels = fp.flow(fp.split(','), fp.map(fp.trim))(options.playbookLabels);
+    this.playbookLabels = fp.flow(fp.split(','), fp.map(fp.trim), fp.sortedUniq)(options.playbookLabels);
   }
 
-  listPlaybooks(callback, playbookLabels, previousResults = []) {
-    if (!playbookLabels) {
-      playbookLabels = this.playbookLabels
-    }
-    this.requestWithDefaults(
-      {
-        url: `${this.options.host}/rest/playbook`,
-        qs: {
-          _filter_labels__contains: `'${playbookLabels[0] || 'events'}'`,
-          _exclude_category: "'deprecated'"
-        },
-        method: 'GET'
-      },
-      200,
-      (err, body) => {
-        if (playbookLabels.length > 1) 
-          return this.listPlaybooks(callback, playbookLabels.slice(1), previousResults.concat(body.data));
-        
-        if (err) return callback({ err, detail: 'Error in getting List of Playbooks to Run' });
-        callback(null, previousResults.concat(body.data));
+  listPlaybooks(callback) {
+    const playbookLabelsStr = this.playbookLabels.toString()
+    const playbooks = playbooksCache.get(playbookLabelsStr);
+
+    if (playbooks) 
+      return callback(null, playbooks);
+
+    async.parallel(
+      fp.map(
+        (playbookLabel) => (done) => {
+          this.requestWithDefaults(
+            {
+              url: `${this.options.host}/rest/playbook`,
+              qs: {
+                _filter_labels__contains: `'${playbookLabel || 'events'}'`,
+                _exclude_category: "'deprecated'"
+              },
+              method: 'GET'
+            },
+            200,
+            (err, body) => {
+              if (err) return done({ err, detail: 'Error in getting List of Playbooks to Run' });
+              done(null, body.data);
+            }
+          );
+        }
+      )(this.playbookLabels),
+      (err, results) => {
+        if (err) {
+          Logger.error({ err: err }, 'Error in onDetails lookup');
+          return callback(err);
+        }
+
+        const playbooks = fp.flow(fp.flatten, fp.uniqBy('id'))(results);
+        playbooksCache.set(playbookLabelsStr, playbooks);
+        callback(null, playbooks);
       }
     );
   }
