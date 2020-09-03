@@ -26,7 +26,7 @@ class Playbooks {
       {
         url: `${this.options.host}/rest/playbook`,
         qs: {
-          _filter_labels__contains: `'${playbookLabels[0]}'`,
+          _filter_labels__contains: `'${playbookLabels[0] || 'events'}'`,
           _exclude_category: "'deprecated'"
         },
         method: 'GET'

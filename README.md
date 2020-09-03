@@ -31,7 +31,7 @@ The API token to use to authenticate with the Phantom server.  See the official 
 
 ### Playbook Labels
 
-A comma separated list of Playbook Labels you want to search by in Phantom. By adding labels, you expand the amount of playbooks you can run on containers found.
+A comma separated list of Playbook Labels for playboks you want to use on Indicators from Phantom. By adding labels, you make more Playbooks available for you to run on Indicators. If left blank, this will default to "events"
 
 ## Installation Instructions
 
