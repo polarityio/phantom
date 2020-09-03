@@ -165,8 +165,7 @@ class Playbooks {
           playbookName: fp.flow(
             fp.getOr('/Unknown', 'playbook'),
             fp.split('/'),
-            fp.slice(-1),
-            fp.head
+            fp.last
           )(playbookRunInfo),
           status: playbookRunInfo.status || 'failure',
           date: moment(playbookRan.update_time).format('MMM D YY, h:mm A')
