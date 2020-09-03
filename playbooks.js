@@ -341,7 +341,7 @@ class Playbooks {
           }
 
           callback(null, {
-            detail: 'Playbook Ran Successfully',
+            detail: 'Playbook Completed Successfully',
             result: body
           });
         }
