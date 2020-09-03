@@ -153,9 +153,7 @@ class Playbooks {
         let playbookRunInfo;
         try {
           playbookRunInfo =
-            playbookRan.message[0] === '{' 
-              ? JSON.parse(playbookRan.message)
-              : { playbook: '/Unknown' };
+            playbookRan.message[0] === '{' ? JSON.parse(playbookRan.message) : {};
 
           if (!playbookRunInfo.status) this.logger.trace({ message: playbookRan.message });
         } catch (error) {
@@ -165,7 +163,7 @@ class Playbooks {
         return {
           playbookId: this.safeToInt(playbookRan.playbook),
           playbookName: fp.flow(
-            fp.get('playbook'),
+            fp.getOr('/Unknown', 'playbook'),
             fp.split('/'),
             fp.slice(-1),
             fp.head
