@@ -173,7 +173,6 @@ class Playbooks {
     return fp.flow(
       fp.get('data'),
       fp.map((playbookRan) => {
-        this.logger.info({playbookRan}, 'Formatting playbook ran');
         let playbookName;
         try {
           if(playbookRan.message[0] === '{'){
@@ -188,8 +187,7 @@ class Playbooks {
           this.logger.error(parseError, 'Error parsing playbook name');
           playbookName = 'Unknown Playbook';
         }
-
-        this.logger.info({playbookName}, 'playbookName');
+        
         return {
           playbookId: this.safeToInt(playbookRan.playbook),
           playbookName: playbookName,
