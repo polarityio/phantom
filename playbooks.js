@@ -185,9 +185,9 @@ class Playbooks {
           if (!playbookRan.status) this.logger.trace({ message: playbookRan.message });
         } catch (error) {
           this.logger.error(parseError, 'Error parsing playbook name');
-          playbookName = 'Unknown Playbook';
+          playbookName = 'Unknown Playbook Name';
         }
-        
+
         return {
           playbookId: this.safeToInt(playbookRan.playbook),
           playbookName: playbookName,
