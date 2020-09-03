@@ -320,7 +320,8 @@ class Playbooks {
           if (err && err !== 'running') {
             return callback({
               detail: 'There was an HTTP error checking the status of the playbook run',
-              err: err
+              err: err,
+              message: err.message
             });
           }
 

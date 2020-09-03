@@ -43,7 +43,7 @@ polarity.export = PolarityComponent.extend({
             if(detail){
               self.setMessage(containerIndex, detail);
             }else{
-              self.setMessage(containerIndex, 'Successfully Completed Playbook');
+              self.setMessage(containerIndex, 'Successfully Run Playbook');
             }
           }
         })
