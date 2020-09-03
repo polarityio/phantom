@@ -146,27 +146,53 @@ class Playbooks {
     return existingPlaybookRunIndex !== -1 ? aggAndReplaceExistingPlaybookRun() : aggNewPlaybookRun();
   }
 
+  /**
+   * Extracts metadata from the playbook.  The most difficult thing to extract is the playbook name.
+   * The playbook name can be extracted in the following ways.
+   *
+   * 1. If the playbookRan object's message field is JSON, we parse and look for a `playbook` property
+   * 2. If the `playbook` property doesn't exist, we look for a `message` property and then extract the
+   *    playbook name from the `message` string.
+   * 3. If the playbookRan object message field is a string (not JSON), then we extract the playbook name
+   *    from the message
+   *
+   *  The `message` property usually contains the name and we look for it by taking any characters after a `/` as
+   *  playbook names are usually in the format <type>/<name> (e.g., community/active_directory_lookup)
+   *
+   * @param body
+   * @returns {*}
+   */
   formatPlaybookRuns(body) {
+
+    const extractPlaybookNameFromMessage = (message) => {
+      if(message) {
+        return message.match(/\/([a-zA-Z0-9_]+)/)[1];
+      }
+      return 'Unknown Playbook Name';
+    };
     return fp.flow(
       fp.get('data'),
       fp.map((playbookRan) => {
         this.logger.info({playbookRan}, 'Formatting playbook ran');
-        let playbookRunInfo;
+        let playbookName;
         try {
-          playbookRunInfo =
-            playbookRan.message[0] === '{' ? JSON.parse(playbookRan.message) : playbookRan.message;
-
-          if (!playbookRunInfo.status) this.logger.trace({ message: playbookRan.message });
+          if(playbookRan.message[0] === '{'){
+            const parsedMessage = JSON.parse(playbookRan.message)
+            playbookName = parsedMessage.playbook ?
+              parsedMessage.playbook.split('/')[1] : extractPlaybookNameFromMessage(parsedMessage.message);
+          } else {
+            playbookName = extractPlaybookNameFromMessage(playbookRan.message)
+          }
+          if (!playbookRan.status) this.logger.trace({ message: playbookRan.message });
         } catch (error) {
-          this.logger.error(parseError, 'Error Parsing playbook ran message');
+          this.logger.error(parseError, 'Error parsing playbook name');
+          playbookName = 'Unknown Playbook';
         }
 
-        this.logger.info({playbookRunInfo}, 'playbookRunInfo');
+        this.logger.info({playbookName}, 'playbookName');
         return {
           playbookId: this.safeToInt(playbookRan.playbook),
-          playbookName: fp.flow(
-            fp.getOr(playbookRunInfo, 'playbook')
-          )(playbookRunInfo),
+          playbookName: playbookName,
           status: playbookRan.status || 'failure',
           date: moment(playbookRan.update_time).format('MMM D YY, h:mm A')
         };
