@@ -29,7 +29,7 @@ polarity.export = PolarityComponent.extend({
         .sendIntegrationMessage({
           data: { entityValue: this.block.entity.value, containerId, playbookId }
         })
-        .then(({ err, playbooksRan, playbooksRanCount, newContainer }) => {
+        .then(({ err, detail, playbooksRan, playbooksRanCount, newContainer }) => {
           if (newContainer) {
             self.setContainer(newContainer);
             containerIndex = 0;
@@ -40,13 +40,17 @@ polarity.export = PolarityComponent.extend({
           if (err) {
             self.setMessage(containerIndex, `Run Failed: ${err.message}`);
           } else {
-            self.setMessage(containerIndex, 'Successfully Completed Playbook');
+            if(detail){
+              self.setMessage(containerIndex, detail);
+            }else{
+              self.setMessage(containerIndex, 'Successfully Completed Playbook');
+            }
           }
         })
         .catch((err) => {
           if (err.message === "Integration Message Timout Error")
             return self.setErrorMessage(containerIndex, 'The playbook is taking longer than expect to complete');
-            
+
           self.setErrorMessage(containerIndex, err.message);
         })
         .finally(() => {

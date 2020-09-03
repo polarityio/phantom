@@ -110,7 +110,8 @@ const _runPlaybookOnExistingContainer = (containerId, actionId, phantomPlaybooks
         return callback(null, {
           err: err || error,
           ...playbooksRan[0],
-          newContainer: false
+          newContainer: false,
+          detail: resp.detail
         });
       }
 

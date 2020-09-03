@@ -27,7 +27,7 @@ class Playbooks {
     const playbookLabelsStr = this.playbookLabels.toString()
     const playbooks = playbooksCache.get(playbookLabelsStr);
 
-    if (playbooks) 
+    if (playbooks)
       return callback(null, playbooks);
 
     async.parallel(
@@ -150,19 +150,23 @@ class Playbooks {
     return fp.flow(
       fp.get('data'),
       fp.map((playbookRan) => {
+        this.logger.info({playbookRan}, 'Formatting playbook ran');
         let playbookRunInfo;
         try {
           playbookRunInfo =
-            playbookRan.message[0] === '{' ? JSON.parse(playbookRan.message) : {};
+            playbookRan.message[0] === '{' ? JSON.parse(playbookRan.message) : playbookRan.message;
 
           if (!playbookRunInfo.status) this.logger.trace({ message: playbookRan.message });
         } catch (error) {
-          this.logger.error(parseError, 'Error Parsing playbook ran message');  
+          this.logger.error(parseError, 'Error Parsing playbook ran message');
         }
 
+        this.logger.info({playbookRunInfo}, 'playbookRunInfo');
         return {
           playbookId: this.safeToInt(playbookRan.playbook),
-          playbookName: fp.flow(fp.getOr('/Unknown', 'playbook'), fp.split('/'), fp.last)(playbookRunInfo),
+          playbookName: fp.flow(
+            fp.getOr(playbookRunInfo, 'playbook')
+          )(playbookRunInfo),
           status: playbookRan.status || 'failure',
           date: moment(playbookRan.update_time).format('MMM D YY, h:mm A')
         };
