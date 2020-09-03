@@ -38,13 +38,16 @@ polarity.export = PolarityComponent.extend({
           }
 
           if (err) {
-            self.setMessage(containerIndex, `Run Failed: ${err.message || err.title}`);
+            self.setMessage(containerIndex, `Run Failed: ${err.message}`);
           } else {
             self.setMessage(containerIndex, 'Successfully completed Playbook');
           }
         })
         .catch((err) => {
-          self.setErrorMessage(containerIndex, err.message || err.title);
+          if (err.message === "Integration Message Timout Error")
+            return self.setErrorMessage(containerIndex, 'The playbook is taking longer than expect to complete');
+            
+          self.setErrorMessage(containerIndex, err.message);
         })
         .finally(() => {
           self.setRunning(containerIndex, false);

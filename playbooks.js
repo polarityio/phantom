@@ -147,19 +147,34 @@ class Playbooks {
   }
 
   formatPlaybookRuns(body) {
-    return body.data.map((playbookRan) => {
-      const playbookRunInfo =
-        playbookRan.message[0] === '{' ? JSON.parse(playbookRan.message) : { playbook: '/Unknown' };
+    return fp.flow(
+      fp.get('data'),
+      fp.map((playbookRan) => {
+        let playbookRunInfo;
+        try {
+          playbookRunInfo =
+            playbookRan.message[0] === '{' 
+              ? JSON.parse(playbookRan.message)
+              : { playbook: '/Unknown' };
 
-      if (!playbookRunInfo.status) this.logger.trace({ message: playbookRan.message });
+          if (!playbookRunInfo.status) this.logger.trace({ message: playbookRan.message });
+        } catch (error) {
+          this.logger.error(parseError, 'Error Parsing playbook ran message');  
+        }
 
-      return {
-        playbookId: this.safeToInt(playbookRan.playbook),
-        playbookName: playbookRunInfo.playbook.split('/').slice(-1)[0],
-        status: playbookRunInfo.status || 'failure',
-        date: moment(playbookRan.update_time).format('MMM D YY, h:mm A')
-      };
-    });
+        return {
+          playbookId: this.safeToInt(playbookRan.playbook),
+          playbookName: fp.flow(
+            fp.get('playbook'),
+            fp.split('/'),
+            fp.slice(-1),
+            fp.head
+          )(playbookRunInfo),
+          status: playbookRunInfo.status || 'failure',
+          date: moment(playbookRan.update_time).format('MMM D YY, h:mm A')
+        };
+      })
+    )(body);
   }
 
   getUnknownPlaybookNames(playbooksRanWithUnknowns, callback) {
