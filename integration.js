@@ -4,11 +4,12 @@ let Playbooks = require('./playbooks');
 const fp = require('lodash/fp');
 let Logger;
 
-function doLookup(entities, { host, ..._options }, callback) {
-  let integrationOptions = {
-    ..._options,
-    host: host.endsWith('/') ? host.slice(0, -1) : host
-  };
+function doLookup(entities, integrationOptions, callback) {
+  const host = fp.getOr('', 'host')(integrationOptions);
+  integrationOptions.host = host.endsWith('/')
+    ? host.slice(0, -1)
+    : host;
+
   Logger.trace({ entities, options: integrationOptions }, 'Entities received by integration');
 
   let phantomContainers = new Containers(Logger, integrationOptions);
