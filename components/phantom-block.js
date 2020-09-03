@@ -40,7 +40,7 @@ polarity.export = PolarityComponent.extend({
           if (err) {
             self.setMessage(containerIndex, `Run Failed: ${err.message}`);
           } else {
-            self.setMessage(containerIndex, 'Successfully completed Playbook');
+            self.setMessage(containerIndex, 'Successfully Completed Playbook');
           }
         })
         .catch((err) => {

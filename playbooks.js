@@ -307,7 +307,7 @@ class Playbooks {
             });
           }
 
-          if (body && body.status === 'failed') {
+          if (body && (body.status === 'failed' || body.status === 'failure')) {
             return callback({
               error: body,
               detail: 'Playbook Run Failed',
