@@ -96,6 +96,16 @@ module.exports = {
       type: 'password',
       userCanEdit: true,
       adminOnly: false
+    },
+    {
+      key: 'playbookLabels',
+      name: 'Playbook Labels',
+      description:
+        'A comma separated list of Playbook Labels used to determine which playbooks can be run on Indicators in Phantom. By adding labels, you make more Playbooks available for you to run. The default value is "events".',
+      default: 'events',
+      type: 'text',
+      userCanEdit: false,
+      adminOnly: false
     }
   ]
 };

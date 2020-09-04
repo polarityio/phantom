@@ -1,10 +1,18 @@
 let request = require('request');
 let moment = require('moment');
 let async = require('async');
+let fp = require('lodash/fp');
+const NodeCache = require('node-cache');
+
+const playbooksCache = new NodeCache({
+  stdTTL: 2 * 60
+});
+
 let ro = require('./request-options');
 let errorHandler = require('./error-handler');
 
-const NUM_PLAYBOOKS_TO_DISPLAY = 20;
+const NUM_PLAYBOOKS_TO_DISPLAY = 100;
+const PLAYBOOK_NAME_REGEX = /\/([a-zA-Z0-9_]+)/;
 
 class Playbooks {
   constructor(logger, options) {
@@ -13,22 +21,45 @@ class Playbooks {
     this.requestWithDefaults = errorHandler(request.defaults(ro.getRequestOptions(this.options)));
     this.playbookRuns = [];
     this.playbookNames = [];
+    this.playbookLabels = fp.flow(fp.split(','), fp.map(fp.trim), fp.sortedUniq)(options.playbookLabels);
   }
 
   listPlaybooks(callback) {
-    this.requestWithDefaults(
-      {
-        url: `${this.options.host}/rest/playbook`,
-        qs: {
-          _filter_labels__contains: "'events'", // TODO update this if you add more event types
-          _exclude_category: "'deprecated'"
-        },
-        method: 'GET'
-      },
-      200,
-      (err, body) => {
-        if (err) return callback({ err, detail: 'Error in getting List of Playbooks to Run' });
-        callback(null, body);
+    const playbookLabelsStr = this.playbookLabels.toString()
+    const playbooks = playbooksCache.get(playbookLabelsStr);
+
+    if (playbooks)
+      return callback(null, playbooks);
+
+    async.parallel(
+      fp.map(
+        (playbookLabel) => (done) => {
+          this.requestWithDefaults(
+            {
+              url: `${this.options.host}/rest/playbook`,
+              qs: {
+                _filter_labels__contains: `'${playbookLabel || 'events'}'`,
+                _exclude_category: "'deprecated'"
+              },
+              method: 'GET'
+            },
+            200,
+            (err, body) => {
+              if (err) return done({ err, detail: 'Error in getting List of Playbooks to Run' });
+              done(null, body.data);
+            }
+          );
+        }
+      )(this.playbookLabels),
+      (err, results) => {
+        if (err) {
+          Logger.error({ err: err }, 'Error in onDetails lookup');
+          return callback(err);
+        }
+
+        const playbooks = fp.flow(fp.flatten, fp.uniqBy('id'))(results);
+        playbooksCache.set(playbookLabelsStr, playbooks);
+        callback(null, playbooks);
       }
     );
   }
@@ -74,10 +105,15 @@ class Playbooks {
           });
         });
       },
-      (err) => callback(err, this.playbookRuns.filter(({ containerId }) => containerIds.includes(containerId)))
+      (err) =>
+        callback(
+          err,
+          this.playbookRuns.filter(({ containerId }) => containerIds.includes(containerId))
+        )
     );
   }
 
+  // Note: not currently used
   getDistinctPlaybookRuns(agg, playbookRun) {
     const existingPlaybookRunIndex = agg.findIndex(({ playbookName }) => playbookName === playbookRun.playbookName);
 
@@ -88,8 +124,8 @@ class Playbooks {
         ...(playbookRun.status === 'success'
           ? { successCount: agg[existingPlaybookRunIndex].successCount + 1 }
           : playbookRun.status === 'failure'
-            ? { failureCount: agg[existingPlaybookRunIndex].failureCount + 1 }
-            : { pendingCount: agg[existingPlaybookRunIndex].pendingCount + 1 })
+          ? { failureCount: agg[existingPlaybookRunIndex].failureCount + 1 }
+          : { pendingCount: agg[existingPlaybookRunIndex].pendingCount + 1 })
       },
       ...agg.slice(existingPlaybookRunIndex + 1)
     ];
@@ -104,28 +140,61 @@ class Playbooks {
         ...(playbookRun.status === 'success'
           ? { successCount: 1 }
           : playbookRun.status === 'failure'
-            ? { failureCount: 1 }
-            : { pendingCount: 1 })
+          ? { failureCount: 1 }
+          : { pendingCount: 1 })
       }
     ];
 
     return existingPlaybookRunIndex !== -1 ? aggAndReplaceExistingPlaybookRun() : aggNewPlaybookRun();
   }
 
+  /**
+   * Extracts metadata from the playbook.  The most difficult thing to extract is the playbook name.
+   * The playbook name can be extracted in the following ways.
+   *
+   * 1. If the playbookRan object's message field is JSON, we parse and look for a `playbook` property
+   * 2. If the `playbook` property doesn't exist, we look for a `message` property and then extract the
+   *    playbook name from the `message` string.
+   * 3. If the playbookRan object message field is a string (not JSON), then we extract the playbook name
+   *    from the message
+   *
+   *  The `message` property usually contains the name and we look for it by taking any characters after a `/` as
+   *  playbook names are usually in the format <type>/<name> (e.g., community/active_directory_lookup)
+   *
+   * @param body
+   * @returns {*}
+   */
   formatPlaybookRuns(body) {
     return body.data.map((playbookRan) => {
-      const playbookRunInfo =
-        playbookRan.message[0] === '{' ? JSON.parse(playbookRan.message) : { playbook: '/Unknown' };
-
-      if (!playbookRunInfo.status) this.logger.trace({ message: playbookRan.message });
+      let playbookName;
+      try {
+        if(playbookRan.message[0] === '{'){
+          const parsedMessage = JSON.parse(playbookRan.message)
+          playbookName = parsedMessage.playbook ?
+            parsedMessage.playbook.split('/')[1] : this._extractPlaybookNameFromMessage(parsedMessage.message);
+        } else {
+          playbookName = this._extractPlaybookNameFromMessage(playbookRan.message)
+        }
+        if (!playbookRan.status) this.logger.trace({ message: playbookRan.message });
+      } catch (error) {
+        this.logger.error(parseError, 'Error parsing playbook name');
+        playbookName = 'Unknown Playbook Name';
+      }
 
       return {
         playbookId: this.safeToInt(playbookRan.playbook),
-        playbookName: playbookRunInfo.playbook.split('/').slice(-1)[0],
-        status: playbookRunInfo.status || 'failure',
+        playbookName: playbookName,
+        status: playbookRan.status || 'failed',
         date: moment(playbookRan.update_time).format('MMM D YY, h:mm A')
       };
-    });
+    })
+  }
+
+  _extractPlaybookNameFromMessage(message){
+    if(message) {
+      return message.match(PLAYBOOK_NAME_REGEX)[1];
+    }
+    return 'Unknown Playbook Name';
   }
 
   getUnknownPlaybookNames(playbooksRanWithUnknowns, callback) {
@@ -250,7 +319,8 @@ class Playbooks {
           if (err && err !== 'running') {
             return callback({
               detail: 'There was an HTTP error checking the status of the playbook run',
-              err: err
+              err: err,
+              message: err.message
             });
           }
 
@@ -260,7 +330,7 @@ class Playbooks {
             });
           }
 
-          if (body && body.status === 'failed') {
+          if (body && (body.status === 'failed' || body.status === 'failure')) {
             return callback({
               error: body,
               detail: 'Playbook Run Failed',
@@ -269,7 +339,7 @@ class Playbooks {
           }
 
           callback(null, {
-            detail: 'Playbook Ran Successfully',
+            detail: 'Playbook Completed Successfully',
             result: body
           });
         }

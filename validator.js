@@ -1,3 +1,5 @@
+const fp = require('lodash/fp');
+
 function validateStringOption(errors, options, optionName, errMessage) {
   if (
     typeof options[optionName].value !== "string" ||
@@ -23,8 +25,18 @@ function validateOptions(options, callback) {
   validateUrlOption(options.host, errors);
   validateStringOption(errors, options, "host", "You must provide a valid Host URL");
   validateStringOption(errors, options, "token", "You must provide a valid API Token");
-
-  callback(null, errors);
+  
+  const commaSeparatedListError = fp.flow(
+    fp.split(','),
+    fp.map(fp.trim),
+    fp.some(fp.includes(' '))
+  )(options.playbookLabels.value)
+    ? {
+        key: 'playbookLabels',
+        message: 'Playbook Labels are not allowed to include spaces.'
+      }
+    : [];
+  callback(null, errors.concat(commaSeparatedListError));
 }
 
 module.exports = validateOptions;
