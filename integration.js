@@ -1,70 +1,81 @@
 let Containers = require('./containers');
 let validateOptions = require('./validator');
 let Playbooks = require('./playbooks');
-
+const fp = require('lodash/fp');
 let Logger;
 
-function doLookup(entities, { host, ..._options }, callback) {
-  let integrationOptions = {
-    ..._options,
-    host: host.endsWith('/') ? host.slice(0, -1) : host
-  };
+function doLookup(entities, integrationOptions, callback) {
+  const host = integrationOptions.host;
+  integrationOptions.host = host.endsWith('/')
+    ? host.slice(0, -1)
+    : host;
+
   Logger.trace({ entities, options: integrationOptions }, 'Entities received by integration');
 
-  let phantomPlaybooks = new Playbooks(Logger, integrationOptions);
   let phantomContainers = new Containers(Logger, integrationOptions);
 
   phantomContainers.getContainers(entities, (err, containers) => {
     if (err) return callback(err, null);
 
-    phantomPlaybooks.listPlaybooks((err, playbooks) => {
-      if (err) return callback(err, null);
-
-      const lookupResults = containers.map(({ entity, containers }) => {
-        if (containers.length) {
-          return {
-            entity,
-            data: {
-              summary: phantomContainers.getSummary(containers),
-              details: {
-                playbooks: playbooks.data,
-                results: containers
-              }
+    const lookupResults = containers.map(({ entity, containers }) => {
+      if (containers.length) {
+        return {
+          entity,
+          data: {
+            summary: phantomContainers.getSummary(containers),
+            details: {
+              results: containers
             }
-          };
-        } else if (entity.requestContext.requestType === 'OnDemand') {
-          // this was an OnDemand request for an entity with no results
-          return {
-            entity,
-            // do not cache this value because there is no data yet
-            isVolatile: true,
-            data: {
-              summary: ['No Events Found'],
-              details: {
-                playbooks: playbooks.data,
-                onDemand: true,
-                entity: entity.value,
-                link: `${integrationOptions.host}/browse`
-              }
+          }
+        };
+      } else if (entity.requestContext.requestType === 'OnDemand') {
+        // this was an OnDemand request for an entity with no results
+        return {
+          entity,
+          // do not cache this value because there is no data yet
+          isVolatile: true,
+          data: {
+            summary: ['No Events Found'],
+            details: {
+              onDemand: true,
+              entity: entity.value,
+              link: `${integrationOptions.host}/browse`
             }
-          };
-        } else {
-          // This was real-time request with no results so we cache it as a miss
-          return {
-            entity,
-            data: null
-          };
-        }
-      });
-
-      Logger.trace({ lookupResults }, 'lookupResults');
-      callback(null, lookupResults);
+          }
+        };
+      } else {
+        // This was real-time request with no results so we cache it as a miss
+        return {
+          entity,
+          data: null
+        };
+      }
     });
+
+    Logger.trace({ lookupResults }, 'lookupResults');
+    callback(null, lookupResults);
   });
 }
 
 function startup(logger) {
   Logger = logger;
+}
+
+function onDetails(lookupObject, integrationOptions, callback) {
+  Logger.trace({ details: lookupObject.data.details }, 'Calling onDetails');
+  let phantomPlaybooks = new Playbooks(Logger, integrationOptions);
+
+  phantomPlaybooks.listPlaybooks((err, playbooks) => {
+    if (err) return callback(err, null);
+
+    const details = fp.get('data.details')(lookupObject);
+
+    lookupObject.data.details = { ...details, playbooks };
+
+    Logger.trace({ lookupObject }, 'lookupObject');
+
+    callback(null, lookupObject.data);
+  });
 }
 
 function runPlaybook(payload, integrationOptions, callback) {
@@ -100,7 +111,8 @@ const _runPlaybookOnExistingContainer = (containerId, actionId, phantomPlaybooks
         return callback(null, {
           err: err || error,
           ...playbooksRan[0],
-          newContainer: false
+          newContainer: false,
+          detail: resp ? resp.detail : ''
         });
       }
 
@@ -148,5 +160,6 @@ module.exports = {
   doLookup,
   startup,
   validateOptions,
-  onMessage: runPlaybook
+  onMessage: runPlaybook,
+  onDetails
 };
