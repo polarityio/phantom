@@ -112,7 +112,7 @@ const _runPlaybookOnExistingContainer = (containerId, actionId, phantomPlaybooks
           err: err || error,
           ...playbooksRan[0],
           newContainer: false,
-          detail: resp.detail
+          detail: resp ? resp.detail : ''
         });
       }
 
