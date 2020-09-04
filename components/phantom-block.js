@@ -22,6 +22,7 @@ polarity.export = PolarityComponent.extend({
       if (!playbookId) return self.setMessage(containerIndex, 'Select a playbook to run.');
 
       this.setMessage(containerIndex, '');
+      self.setErrorMessage(containerIndex, '');
       this.setRunning(containerIndex, true);
       this.get('block').notifyPropertyChange('data');
 
@@ -38,7 +39,7 @@ polarity.export = PolarityComponent.extend({
           }
 
           if (err) {
-            self.setMessage(containerIndex, `Run Failed: ${err.message}`);
+            self.setErrorMessage(containerIndex, `Run Failed: ${err.message}`);
           } else {
             if(detail){
               self.setMessage(containerIndex, detail);
