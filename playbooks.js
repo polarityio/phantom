@@ -12,6 +12,7 @@ let ro = require('./request-options');
 let errorHandler = require('./error-handler');
 
 const NUM_PLAYBOOKS_TO_DISPLAY = 100;
+const PLAYBOOK_NAME_REGEX = /\/([a-zA-Z0-9_]+)/;
 
 class Playbooks {
   constructor(logger, options) {
@@ -112,6 +113,7 @@ class Playbooks {
     );
   }
 
+  // Note: not currently used
   getDistinctPlaybookRuns(agg, playbookRun) {
     const existingPlaybookRunIndex = agg.findIndex(({ playbookName }) => playbookName === playbookRun.playbookName);
 
@@ -163,39 +165,36 @@ class Playbooks {
    * @returns {*}
    */
   formatPlaybookRuns(body) {
-
-    const extractPlaybookNameFromMessage = (message) => {
-      if(message) {
-        return message.match(/\/([a-zA-Z0-9_]+)/)[1];
-      }
-      return 'Unknown Playbook Name';
-    };
-    return fp.flow(
-      fp.get('data'),
-      fp.map((playbookRan) => {
-        let playbookName;
-        try {
-          if(playbookRan.message[0] === '{'){
-            const parsedMessage = JSON.parse(playbookRan.message)
-            playbookName = parsedMessage.playbook ?
-              parsedMessage.playbook.split('/')[1] : extractPlaybookNameFromMessage(parsedMessage.message);
-          } else {
-            playbookName = extractPlaybookNameFromMessage(playbookRan.message)
-          }
-          if (!playbookRan.status) this.logger.trace({ message: playbookRan.message });
-        } catch (error) {
-          this.logger.error(parseError, 'Error parsing playbook name');
-          playbookName = 'Unknown Playbook Name';
+    return body.data.map((playbookRan) => {
+      let playbookName;
+      try {
+        if(playbookRan.message[0] === '{'){
+          const parsedMessage = JSON.parse(playbookRan.message)
+          playbookName = parsedMessage.playbook ?
+            parsedMessage.playbook.split('/')[1] : this._extractPlaybookNameFromMessage(parsedMessage.message);
+        } else {
+          playbookName = this._extractPlaybookNameFromMessage(playbookRan.message)
         }
+        if (!playbookRan.status) this.logger.trace({ message: playbookRan.message });
+      } catch (error) {
+        this.logger.error(parseError, 'Error parsing playbook name');
+        playbookName = 'Unknown Playbook Name';
+      }
 
-        return {
-          playbookId: this.safeToInt(playbookRan.playbook),
-          playbookName: playbookName,
-          status: playbookRan.status || 'failure',
-          date: moment(playbookRan.update_time).format('MMM D YY, h:mm A')
-        };
-      })
-    )(body);
+      return {
+        playbookId: this.safeToInt(playbookRan.playbook),
+        playbookName: playbookName,
+        status: playbookRan.status || 'failed',
+        date: moment(playbookRan.update_time).format('MMM D YY, h:mm A')
+      };
+    })
+  }
+
+  _extractPlaybookNameFromMessage(message){
+    if(message) {
+      return message.match(PLAYBOOK_NAME_REGEX)[1];
+    }
+    return 'Unknown Playbook Name';
   }
 
   getUnknownPlaybookNames(playbooksRanWithUnknowns, callback) {
