@@ -101,7 +101,7 @@ module.exports = {
       key: 'playbookLabels',
       name: 'Playbook Labels',
       description:
-        'A comma separated list of Playbook Labels for playboks you want to use on Indicators from Phantom. By adding labels, you make more Playbooks available for you to run on Indicators. If left blank, this will default to "events"',
+        'A comma separated list of Playbook Labels used to determine which playbooks can be run on Indicators in Phantom. By adding labels, you make more Playbooks available for you to run. The default value is "events".',
       default: 'events',
       type: 'text',
       userCanEdit: false,

@@ -23,15 +23,15 @@ To learn more about Phantom, visit the [official website](https://www.phantom.us
 
 ### Server URL
 
-The Server URL where the Phantom API instance is located.  The Server URL should include the schema (https) and the fully qualified domain name of the Phantom server.
+The Server URL where the Phantom API instance is located.  The Server URL should include the schema (https://), and the fully qualified domain name or IP address of the Phantom server. For example, `https://myphantom.server`.
 
 ### Token
 
-The API token to use to authenticate with the Phantom server.  See the official documentation for instructions on setting up an API token.
+The API token used to authenticate with the Phantom server.  See the official Phantom documentation for instructions on setting up an API token.
 
 ### Playbook Labels
 
-A comma separated list of Playbook Labels for playboks you want to use on Indicators from Phantom. By adding labels, you make more Playbooks available for you to run on Indicators. If left blank, this will default to "events"
+A comma separated list of Playbook Labels used to determine which playbooks can be run on Indicators in Phantom. By adding labels, you make more Playbooks available for you to run. The default value is "events".
 
 ## Installation Instructions
 
