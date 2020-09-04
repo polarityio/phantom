@@ -5,7 +5,7 @@ const fp = require('lodash/fp');
 let Logger;
 
 function doLookup(entities, integrationOptions, callback) {
-  const host = fp.getOr('', 'host')(integrationOptions);
+  const host = integrationOptions.host;
   integrationOptions.host = host.endsWith('/')
     ? host.slice(0, -1)
     : host;
