@@ -2,6 +2,7 @@ const async = require('async');
 const request = require('request');
 const ro = require('./request-options');
 const Playbooks = require('./playbooks');
+const fp = require('lodash/fp');
 
 class Containers {
   constructor(logger, options) {
@@ -10,28 +11,47 @@ class Containers {
     this.playbooks = new Playbooks(logger, options);
     this.containers = [];
     this.containerResults = [];
+    this.playbookLabels = fp.flow(fp.split(','), fp.map(fp.trim), fp.sortedUniq)(options.playbookLabels);
   }
 
   getContainers(entities, callback) {
     async.each(
       entities,
       (entity, next) =>
-        this._getContainerSearchResults(entity, (err, containerSearchResults) => {
-          if (err) return next(err, null);
-          if (!containerSearchResults) return next();
+        this.playbookLabels.length && this.integrationOptions.showResultsWithLabels
+          ? async.parallel(
+              fp.map((playbookLabel) => (done) => {
+                this._getContainerSearchResults(entity, playbookLabel, (err, result) => {
+                  if (err) return done(err, null);
 
-          this._getContainerFromSearchResults(entity, containerSearchResults, next);
-        }),
+                  done(null, result);
+                });
+              })(this.playbookLabels),
+              (err, result) => {
+                const containerSearchResults = fp.flatten(result);
+
+                if (err) return next(err, null);
+                if (!containerSearchResults) return next();
+
+                this._getContainerFromSearchResults(entity, containerSearchResults, next);
+              }
+            )
+          : this._getContainerSearchResults(entity, '', (err, containerSearchResults) => {
+              if (err) return next(err, null);
+              if (!containerSearchResults) return next();
+
+              this._getContainerFromSearchResults(entity, containerSearchResults, next);
+            }),
       (err) => callback(err, this.containers)
     );
   }
 
-  _getContainerSearchResults(entity, callback) {
+  _getContainerSearchResults(entity, label, callback) {
     const requestOptions = ro.getRequestOptions(this.integrationOptions);
     requestOptions.url = this.integrationOptions.host + '/rest/search';
     requestOptions.qs = {
       query: entity.value,
-      categories: 'container'
+      ...(label && { _filter_labels__contains: label })
     };
 
     this.logger.trace({ options: requestOptions }, 'Request options for Container Search');
@@ -40,7 +60,7 @@ class Containers {
       this.logger.trace({ results: body, error: err, response: resp }, 'Results of entity lookup');
 
       if (err) {
-        return callback({ detail: 'Container Search HTTP Request Failed', err});
+        return callback({ detail: 'Container Search HTTP Request Failed', err });
       }
 
       if (resp.statusCode !== 200) {
@@ -60,8 +80,14 @@ class Containers {
     });
   }
 
-  _getContainerFromSearchResults(entity, { results }, next) {
-    const ids = results.map(({ id }) => id);
+  _getContainerFromSearchResults(entity, searchResults, next) {
+    const ids = fp.flow(
+      fp.get('results'),
+      fp.filter(({ category }) => category === 'artifact' || category === 'container'),
+      fp.map(({ id, category, url }) => (category === 'container' ? id : this._getContainerIdFromArtifactUrl(url))),
+      fp.compact,
+      fp.uniq
+    )(searchResults);
 
     this._getContainerResults(ids, entity, (err, containers) => {
       if (err) return next({ err, detail: 'Error getting Container Details' });
@@ -76,6 +102,9 @@ class Containers {
     });
   }
 
+  _getContainerIdFromArtifactUrl(url) {
+    return fp.flow(fp.split('/'), fp.get(4), fp.toSafeInteger)(url);
+  }
   _getContainerResults(containerIds, entity, callback) {
     const containerHasBeenRequested = (containerId) =>
       this.containerResults.find((containerResult) => containerResult.id === containerId);
@@ -110,7 +139,11 @@ class Containers {
           next();
         });
       },
-      (err) => callback(err, this._uniqueBy('id', this.containerResults).filter(({ id }) => containerIds.includes(id)))
+      (err) =>
+        callback(
+          err,
+          this._uniqueBy('id', this.containerResults).filter(({ id }) => containerIds.includes(id))
+        )
     );
   }
 
@@ -132,7 +165,10 @@ class Containers {
         };
       })
     });
-    next(null, this.containers.find((container) => container.entity.value === entity.value));
+    next(
+      null,
+      this.containers.find((container) => container.entity.value === entity.value)
+    );
   }
 
   getSummary(containers) {
@@ -154,11 +190,54 @@ class Containers {
       if (err) return callback(err, null);
       if (!containerSearchResults) {
         this._createContainerRequest(entityValue, (err, container) => {
-          this.logger.trace({container}, 'Created Container');
-          this._getCreatedContainer(entityValue, container.id, callback);
+          if (err) 
+            return callback({ err, detail: 'Failed to Create Container' });
+
+          this.logger.trace({ container }, 'Created Container');
+          this._createArtifactOnContainer(entityValue, container.id, (err, artifactCreatioResult) => {
+            if (err) 
+              return callback({ err, detail: 'Failed to Create Artifact' });
+
+            this._getCreatedContainer(entityValue, container.id, callback);
+          }
+          );
         });
       } else {
         this._getCreatedContainer(entityValue, containerSearchResults.results[0].id, callback);
+      }
+    });
+  }
+
+  _createArtifactOnContainer(entityValue, containerId, callback) {
+    const requestOptions = ro.getRequestOptions(this.integrationOptions);
+    requestOptions.url = this.integrationOptions.host + '/rest/artifact';
+    requestOptions.method = 'POST';
+    requestOptions.body = {
+      container_id: containerId,
+      name: entityValue,
+      label: 'events',
+      severity: 'medium',
+      tags: ['polarity']
+    };
+
+    this.logger.trace({ options: requestOptions }, 'Request options for Artifact Creation Request');
+
+    request(requestOptions, (err, resp, body) => {
+      if (!resp || resp.statusCode !== 200 || err || !body.success) {
+        if (resp.statusCode == 404) {
+          this.logger.info({ entityValue }, 'Entity not in Phantom');
+          return callback();
+        } else {
+          this.logger.error({ error: err, body }, `error creating container with value ${entityValue}`);
+          return callback({ err: 'Failed to Create Artifcat', detail: err });
+        }
+      }
+
+      this.logger.trace({ body }, 'Artifact Creation Request Result');
+      if (body.success) {
+        callback(null, body);
+      } else {
+        callback({ detail: "Failed to Create Artifact", body });
       }
     });
   }
@@ -190,7 +269,7 @@ class Containers {
     requestOptions.method = 'POST';
     requestOptions.body = {
       label: 'events',
-      name: entityValue,
+      name: `Polarity - ${entityValue}`,
       sensitivity: 'amber',
       severity: 'medium',
       status: 'new',
