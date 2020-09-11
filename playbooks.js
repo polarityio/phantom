@@ -57,7 +57,19 @@ class Playbooks {
           return callback(err);
         }
 
-        const playbooks = fp.flow(fp.flatten, fp.uniqBy('id'))(results);
+        const playbooksList = fp.flow(fp.flatten, fp.uniqBy('id'))(results);
+        const playbooks = fp.reduce((agg, label) => {
+          return { 
+            ...agg, 
+            [label]: fp.filter(
+              fp.flow(fp.get('labels'), fp.includes(label)), 
+              playbooksList
+            )
+          };
+        }, {})(this.playbookLabels);
+        
+        
+        
         playbooksCache.set(playbookLabelsStr, playbooks);
         callback(null, playbooks);
       }

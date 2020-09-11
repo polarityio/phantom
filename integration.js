@@ -19,14 +19,26 @@ function doLookup(entities, integrationOptions, callback) {
 
     const lookupResults = containers.map(({ entity, containers }) => {
       if (containers.length) {
+        const onlyShowContainerResultsWithLabels =
+          containers.length && phantomContainers.playbookLabels.length && integrationOptions.showResultsWithLabels;
+
+        const containerResultsWithSpecifiedLabels = fp.filter(
+          fp.flow(fp.get('label'), (label) => fp.includes(label, phantomContainers.playbookLabels)),
+          containers
+        );
+
         return {
           entity,
-          data: {
-            summary: phantomContainers.getSummary(containers),
-            details: {
-              results: containers
-            }
-          }
+          isVolatile: true,
+          data:
+            onlyShowContainerResultsWithLabels && !containerResultsWithSpecifiedLabels.length
+              ? null
+              : {
+                  summary: phantomContainers.getSummary(containers),
+                  details: {
+                    results: onlyShowContainerResultsWithLabels ? containerResultsWithSpecifiedLabels : containers
+                  }
+                }
         };
       } else if (entity.requestContext.requestType === 'OnDemand') {
         // this was an OnDemand request for an entity with no results
@@ -64,13 +76,22 @@ function startup(logger) {
 function onDetails(lookupObject, integrationOptions, callback) {
   Logger.trace({ details: lookupObject.data.details }, 'Calling onDetails');
   let phantomPlaybooks = new Playbooks(Logger, integrationOptions);
-
+  
   phantomPlaybooks.listPlaybooks((err, playbooks) => {
     if (err) return callback(err, null);
 
     const details = fp.get('data.details')(lookupObject);
 
-    lookupObject.data.details = { ...details, playbooks };
+    lookupObject.data.details = {
+      ...details,
+      ...(details.onDemand && {
+        playbooks: fp.flow(fp.flatMap(fp.identity), fp.uniqBy('id'))(playbooks)
+      }),
+      results: fp.flow(
+        fp.getOr([], 'data.details.results'),
+        fp.map((container) => ({ ...container, playbooks: playbooks[container.label] }))
+      )(lookupObject)
+    };
 
     Logger.trace({ lookupObject }, 'lookupObject');
 
