@@ -102,6 +102,7 @@ function onDetails(lookupObject, integrationOptions, callback) {
 function runPlaybook(payload, integrationOptions, callback) {
   let containerId = payload.data.containerId;
   let actionId = payload.data.playbookId;
+  let actions = payload.data.playbooks;
   let entityValue = payload.data.entityValue;
 
   let phantomPlaybooks = new Playbooks(Logger, integrationOptions);
@@ -109,7 +110,7 @@ function runPlaybook(payload, integrationOptions, callback) {
   if (containerId) {
     _runPlaybookOnExistingContainer(containerId, actionId, phantomPlaybooks, callback);
   } else if (entityValue) {
-    _createContainerAndRunPlaybook(entityValue, integrationOptions, actionId, phantomPlaybooks, callback);
+    _createContainerAndRunPlaybook(entityValue, integrationOptions, actionId, actions, phantomPlaybooks, callback);
   } else {
     const err = {
       err: 'Unexpected Error',
@@ -141,36 +142,51 @@ const _runPlaybookOnExistingContainer = (containerId, actionId, phantomPlaybooks
     });
   });
 
-function _createContainerAndRunPlaybook(entityValue, integrationOptions, actionId, phantomPlaybooks, callback) {
+function _createContainerAndRunPlaybook(entityValue, integrationOptions, actionId, actions, phantomPlaybooks, callback) {
   let containers = new Containers(Logger, integrationOptions);
-  containers.createContainer(entityValue, (err, container) => {
-    if (err) return callback({ err: 'Failed to Create Container', detail: err });
-    phantomPlaybooks.runPlaybookAgainstContainer(actionId, container.id, (err, resp) => {
-      Logger.trace({ resp, err }, 'Result of playbook run');
-      if (!resp && !err) Logger.error({ err: new Error('No response found!') }, 'Error running playbook');
 
-      phantomPlaybooks.getPlaybookRunHistory([container.id], (error, playbooksRan) => {
-        Logger.trace({ playbooksRan, error }, 'Result of playbook run history');
-        if (err || error) {
-          Logger.trace({ playbooksRan, error }, 'Failed to get Playbook Run History');
-          return callback(null, {
-            err: err || error,
+  const actionLabel = fp.flow(
+    fp.find((action) => action.id == actionId),
+    fp.getOr('events', 'labels[0]')
+  )(actions);
+
+  containers.createContainer(entityValue, actionLabel, (err, containerWithoutPlaybooks) => {
+    if (err) return callback({ errors: [{ err: 'Failed to Create Container', detail: err }] });
+
+    let phantomPlaybooks = new Playbooks(Logger, integrationOptions);
+
+    phantomPlaybooks.listPlaybooks((err, playbooks) => {
+      if (err) return callback(err, null);
+
+      const container = { ...containerWithoutPlaybooks, playbooks: playbooks[containerWithoutPlaybooks.label] };
+
+      phantomPlaybooks.runPlaybookAgainstContainer(actionId, container.id, (err, resp) => {
+        Logger.trace({ resp, err }, 'Result of playbook run');
+        if (!resp && !err) Logger.error({ err: new Error('No response found!') }, 'Error running playbook');
+  
+        phantomPlaybooks.getPlaybookRunHistory([container.id], (error, playbooksRan) => {
+          Logger.trace({ playbooksRan, error }, 'Result of playbook run history');
+          if (err || error) {
+            Logger.trace({ playbooksRan, error }, 'Failed to get Playbook Run History');
+            return callback(null, {
+              err: err || error,
+              ...playbooksRan[0],
+              newContainer: {
+                ...container,
+                playbooksRan: playbooksRan && playbooksRan[0].playbooksRan,
+                playbooksRanCount: playbooksRan && playbooksRan[0].playbooksRan.length
+              }
+            });
+          }
+          callback(null, {
+            ...resp,
             ...playbooksRan[0],
             newContainer: {
               ...container,
-              playbooksRan: playbooksRan && playbooksRan[0].playbooksRan,
-              playbooksRanCount: playbooksRan && playbooksRan[0].playbooksRan.length
+              playbooksRan: playbooksRan[0].playbooksRan,
+              playbooksRanCount: playbooksRan[0].playbooksRan.length
             }
           });
-        }
-        callback(null, {
-          ...resp,
-          ...playbooksRan[0],
-          newContainer: {
-            ...container,
-            playbooksRan: playbooksRan[0].playbooksRan,
-            playbooksRanCount: playbooksRan[0].playbooksRan.length
-          }
         });
       });
     });

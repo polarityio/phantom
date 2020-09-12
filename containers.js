@@ -168,17 +168,17 @@ class Containers {
     );
   }
 
-  createContainer(entityValue, callback) {
+  createContainer(entityValue, actionLabel, callback) {
     this._getContainerSearchResults({ value: entityValue }, (err, containerSearchResults) => {
       this.logger.trace({ entityValue, containerSearchResults, err }, 'IN createContainer');
 
       if (err) return callback(err, null);
       if (!containerSearchResults) {
-        this._createContainerRequest(entityValue, (err, container) => {
+        this._createContainerRequest(entityValue, actionLabel, (err, container) => {
           if (err) return callback({ err, detail: 'Failed to Create Container' });
 
           this.logger.trace({ container }, 'Created Container');
-          this._createArtifactOnContainer(entityValue, container.id, (err, artifactCreatioResult) => {
+          this._createArtifactOnContainer(entityValue, container.id, actionLabel, (err, artifactCreatioResult) => {
             if (err) return callback({ err, detail: 'Failed to Create Artifact' });
 
             this._getCreatedContainer(entityValue, container.id, callback);
@@ -190,16 +190,16 @@ class Containers {
     });
   }
 
-  _createArtifactOnContainer(entityValue, containerId, callback) {
+  _createArtifactOnContainer(entityValue, containerId, actionLabel, callback) {
     const requestOptions = ro.getRequestOptions(this.integrationOptions);
     requestOptions.url = this.integrationOptions.host + '/rest/artifact';
     requestOptions.method = 'POST';
     requestOptions.body = {
       container_id: containerId,
       name: entityValue,
-      label: 'events',
+      label: actionLabel || 'events',
       severity: 'medium',
-      tags: ['polarity']
+      tags: ['Uploaded_From_Polarity']
     };
 
     this.logger.trace({ options: requestOptions }, 'Request options for Artifact Creation Request');
@@ -211,7 +211,7 @@ class Containers {
           return callback();
         } else {
           this.logger.error({ error: err, body }, `error creating container with value ${entityValue}`);
-          return callback({ err: 'Failed to Create Artifcat', detail: err });
+          return callback({ err: 'Failed to Create Artifact', detail: err });
         }
       }
 
@@ -239,24 +239,24 @@ class Containers {
         callback(null, {
           ...containers[0],
           ...containerPlaybookRuns[0],
-          link: `${this.integrationOptions.host}/browse`
+          link: `${this.integrationOptions.host}/mission/${containers[0].id}`
         });
       });
     });
   }
 
-  _createContainerRequest(entityValue, callback) {
+  _createContainerRequest(entityValue, actionLabel, callback) {
     const requestOptions = ro.getRequestOptions(this.integrationOptions);
     requestOptions.url = this.integrationOptions.host + '/rest/container';
     requestOptions.method = 'POST';
     requestOptions.body = {
-      label: 'events',
+      label: actionLabel || 'events',
       name: `Polarity - ${entityValue}`,
       sensitivity: 'amber',
       severity: 'medium',
       status: 'new',
       container_type: 'default',
-      tags: ['polarity']
+      tags: ['Uploaded_From_Polarity']
     };
 
     this.logger.trace({ options: requestOptions }, 'Request options for Container Creation Request');

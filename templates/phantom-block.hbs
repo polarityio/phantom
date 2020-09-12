@@ -14,7 +14,7 @@
 
   <h1 class="p-title">{{fa-icon "info-circle" fixedWidth=true}} Create Event and Run Playbook</h1>
 
-  <select class="w-100" size=5 onchange={{action (mut newEventPlaybookId) value="target.value"}}>
+  <select class="w-100" size=5 disabled={{isRunning}} onchange={{action (mut newEventPlaybookId) value="target.value"}}>
     {{#each details.playbooks as |playbook|}}
       <option value="{{playbook.id}}">{{playbook.name}}</option>
     {{/each}}
@@ -26,6 +26,7 @@
       {{/if}}
     </div>
     <button {{action "runPlaybook" null null newEventPlaybookId}}
+            disabled={{isRunning}}
             class="p-btn btn btn-light mt-1">Create Event & Run
     </button>
   </div>
@@ -117,7 +118,7 @@
           {{humanize playbook.name}}
         {{/power-select}}
         --}}
-        <select class="w-100" size=5 onchange={{action (mut container.__selectedPlaybookId) value="target.value"}}>
+        <select class="w-100" size=5 disabled={{container.__running}} onchange={{action (mut container.__selectedPlaybookId) value="target.value"}}>
           {{#if block.isLoadingDetails}}
             <option>
               {{fa-icon "spinner-third" fixedWidth=true spin=true}} Loading...
@@ -134,6 +135,7 @@
             {{/if}}
           </div>
           <button {{action "runPlaybook" containerIndex container.id container.__selectedPlaybookId}}
+                  disabled={{container.__running}}
                   class="p-btn btn btn-light mt-1">Run Playbook
           </button>
         </div>

@@ -17,8 +17,6 @@ polarity.export = PolarityComponent.extend({
     runPlaybook: function(containerIndex, containerId, playbookId) {
       let self = this;
 
-      //console.info(`runPlaybook index: ${containerIndex}, containerId: ${containerId}, playbookId: ${playbookId} `);
-
       if (!playbookId) return self.setMessage(containerIndex, 'Select a playbook to run.');
 
       this.setMessage(containerIndex, '');
@@ -26,9 +24,10 @@ polarity.export = PolarityComponent.extend({
       this.setRunning(containerIndex, true);
       this.get('block').notifyPropertyChange('data');
 
+
       self
         .sendIntegrationMessage({
-          data: { entityValue: this.block.entity.value, containerId, playbookId }
+          data: { entityValue: this.block.entity.value, containerId, playbookId, playbooks: self.get('details.playbooks') }
         })
         .then(({ err, detail, playbooksRan, playbooksRanCount, newContainer }) => {
           if (newContainer) {
@@ -39,17 +38,17 @@ polarity.export = PolarityComponent.extend({
           }
 
           if (err) {
-            self.setErrorMessage(containerIndex, `Run Failed: ${err.message}`);
+            self.setErrorMessage(containerIndex, `Run Failed: ${err}`);
           } else {
-            if(detail){
+            if (detail) {
               self.setMessage(containerIndex, detail);
-            }else{
+            } else {
               self.setMessage(containerIndex, 'Successfully Run Playbook');
             }
           }
         })
         .catch((err) => {
-          if (err.message === "Integration Message Timout Error")
+          if (err.message === 'Integration Message Timout Error')
             return self.setErrorMessage(containerIndex, 'The playbook is taking longer than expect to complete');
 
           self.setErrorMessage(containerIndex, err.message);
