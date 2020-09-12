@@ -14,11 +14,40 @@
 
   <h1 class="p-title">{{fa-icon "info-circle" fixedWidth=true}} Create Event and Run Playbook</h1>
 
-  <select class="w-100" size=5 disabled={{isRunning}} onchange={{action (mut newEventPlaybookId) value="target.value"}}>
-    {{#each details.playbooks as |playbook|}}
-      <option value="{{playbook.id}}">{{playbook.name}}</option>
-    {{/each}}
-  </select>
+  <div class="selectContainer">
+    <span class="p-value">Event Owner: </span>
+    <select class="w-100" onchange={{action (mut eventOwner) value="target.value"}} disabled={{isRunning}}>
+      {{#each details.users as |user|}}
+        <option value="{{user.id}}">{{user.username}}</option>
+      {{/each}}
+    </select>
+  </div>
+  <div class="selectContainer">
+    <span class="p-value">Severity: </span>
+    <select class="w-100" onchange={{action (mut severity) value="target.value"}} disabled={{isRunning}}>
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+    </select>
+  </div>
+  <div class="selectContainer">
+    <span class="p-value">Sensitivity: </span>
+    <select class="w-100" onchange={{action (mut sensitivity) value="target.value"}} disabled={{isRunning}}>
+        <option value="white">TLP:White</option>
+        <option value="green">TLP:Green</option>
+        <option value="amber">TLP:Amber</option>
+        <option value="red">TLP:Red</option>
+    </select>
+  </div>
+  <div class="selectContainer">
+    <span class="p-value">Playbook: </span>
+    <select class="w-100" size=5 disabled={{isRunning}} onchange={{action (mut newEventPlaybookId) value="target.value"}}>
+      {{#each details.playbooks as |playbook|}}
+        <option value="{{playbook.id}}">{{playbook.name}}</option>
+      {{/each}}
+    </select>
+  </div>
+
   <div class="d-flex flex-row justify-content-between align-items-center">
     <div>
       {{#if isRunning}}

@@ -25,32 +25,29 @@ class Playbooks {
   }
 
   listPlaybooks(callback) {
-    const playbookLabelsStr = this.playbookLabels.toString()
+    const playbookLabelsStr = this.playbookLabels.toString();
     const playbooks = playbooksCache.get(playbookLabelsStr);
 
-    if (playbooks)
-      return callback(null, playbooks);
+    if (playbooks) return callback(null, playbooks);
 
     async.parallel(
-      fp.map(
-        (playbookLabel) => (done) => {
-          this.requestWithDefaults(
-            {
-              url: `${this.options.host}/rest/playbook`,
-              qs: {
-                _filter_labels__contains: `'${playbookLabel || 'events'}'`,
-                _exclude_category: "'deprecated'"
-              },
-              method: 'GET'
+      fp.map((playbookLabel) => (done) => {
+        this.requestWithDefaults(
+          {
+            url: `${this.options.host}/rest/playbook`,
+            qs: {
+              _filter_labels__contains: `'${playbookLabel || 'events'}'`,
+              _exclude_category: "'deprecated'"
             },
-            200,
-            (err, body) => {
-              if (err) return done({ err, detail: 'Error in getting List of Playbooks to Run' });
-              done(null, body.data);
-            }
-          );
-        }
-      )(this.playbookLabels),
+            method: 'GET'
+          },
+          200,
+          (err, body) => {
+            if (err) return done({ err, detail: 'Error in getting List of Playbooks to Run' });
+            done(null, body.data);
+          }
+        );
+      })(this.playbookLabels),
       (err, results) => {
         if (err) {
           Logger.error({ err: err }, 'Error in onDetails lookup');
@@ -59,17 +56,12 @@ class Playbooks {
 
         const playbooksList = fp.flow(fp.flatten, fp.uniqBy('id'))(results);
         const playbooks = fp.reduce((agg, label) => {
-          return { 
-            ...agg, 
-            [label]: fp.filter(
-              fp.flow(fp.get('labels'), fp.includes(label)), 
-              playbooksList
-            )
+          return {
+            ...agg,
+            [label]: fp.filter(fp.flow(fp.get('labels'), fp.includes(label)), playbooksList)
           };
         }, {})(this.playbookLabels);
-        
-        
-        
+
         playbooksCache.set(playbookLabelsStr, playbooks);
         callback(null, playbooks);
       }
@@ -180,12 +172,13 @@ class Playbooks {
     return body.data.map((playbookRan) => {
       let playbookName;
       try {
-        if(playbookRan.message[0] === '{'){
-          const parsedMessage = JSON.parse(playbookRan.message)
-          playbookName = parsedMessage.playbook ?
-            parsedMessage.playbook.split('/')[1] : this._extractPlaybookNameFromMessage(parsedMessage.message);
+        if (playbookRan.message[0] === '{') {
+          const parsedMessage = JSON.parse(playbookRan.message);
+          playbookName = parsedMessage.playbook
+            ? parsedMessage.playbook.split('/')[1]
+            : this._extractPlaybookNameFromMessage(parsedMessage.message);
         } else {
-          playbookName = this._extractPlaybookNameFromMessage(playbookRan.message)
+          playbookName = this._extractPlaybookNameFromMessage(playbookRan.message);
         }
         if (!playbookRan.status) this.logger.trace({ message: playbookRan.message });
       } catch (error) {
@@ -199,11 +192,11 @@ class Playbooks {
         status: playbookRan.status || 'failed',
         date: moment(playbookRan.update_time).format('MMM D YY, h:mm A')
       };
-    })
+    });
   }
 
-  _extractPlaybookNameFromMessage(message){
-    if(message) {
+  _extractPlaybookNameFromMessage(message) {
+    if (message) {
       return message.match(PLAYBOOK_NAME_REGEX)[1];
     }
     return 'Unknown Playbook Name';

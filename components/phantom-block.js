@@ -1,20 +1,27 @@
 polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias('block.data.details'),
   containers: Ember.computed.alias('details.results'),
-  onDemand: Ember.computed('block.entity.requestContext.requestType', function() {
+  onDemand: Ember.computed('block.entity.requestContext.requestType', function () {
     return this.block.entity.requestContext.requestType === 'OnDemand';
   }),
+  eventOwner: '',
+  severity: 'low',
+  sensitivity: 'white',
   newEventMessage: '',
   newEventPlaybookId: null,
   isRunning: false,
-  timezone: Ember.computed('Intl', function() {
+  timezone: Ember.computed('Intl', function () {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
+  init() {
+    this.set('eventOwner', this.get('details.users')[0].id);
+    this._super(...arguments);
+  },
   actions: {
-    changeTab: function(containerIndex, tabName) {
+    changeTab: function (containerIndex, tabName) {
       this.set(`containers.${containerIndex}.__activeTab`, tabName);
     },
-    runPlaybook: function(containerIndex, containerId, playbookId) {
+    runPlaybook: function (containerIndex, containerId, playbookId) {
       let self = this;
 
       if (!playbookId) return self.setMessage(containerIndex, 'Select a playbook to run.');
@@ -24,10 +31,17 @@ polarity.export = PolarityComponent.extend({
       this.setRunning(containerIndex, true);
       this.get('block').notifyPropertyChange('data');
 
-
       self
         .sendIntegrationMessage({
-          data: { entityValue: this.block.entity.value, containerId, playbookId, playbooks: self.get('details.playbooks') }
+          data: {
+            entityValue: this.block.entity.value,
+            containerId,
+            playbookId,
+            playbooks: self.get('details.playbooks'),
+            eventOwner: self.get('eventOwner'),
+            severity: self.get('severity'),
+            sensitivity: self.get('sensitivity')
+          }
         })
         .then(({ err, detail, playbooksRan, playbooksRanCount, newContainer }) => {
           if (newContainer) {
