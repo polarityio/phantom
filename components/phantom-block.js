@@ -14,7 +14,8 @@ polarity.export = PolarityComponent.extend({
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
   init() {
-    this.set('eventOwner', this.get('details.users')[0].id);
+    const users = this.get('details.users');
+    this.set('eventOwner', users && users[0] && users[0].id );
     this._super(...arguments);
   },
   actions: {
