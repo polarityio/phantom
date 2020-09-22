@@ -33,6 +33,11 @@ The API token used to authenticate with the Phantom server.  See the official Ph
 
 A comma separated list of Playbook Labels used to determine which playbooks can be run on Indicators in Phantom. By adding labels, you make more Playbooks available for you to run. The default value is "events".
 
+### Only Show Events with Playbook Labels
+
+If checked, only Events that have one of your Playbook Labels listed will show up in the overlay.
+
+
 ## Installation Instructions
 
 Installation instructions for integrations are provided on the [PolarityIO GitHub Page](https://polarityio.github.io/).

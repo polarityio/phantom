@@ -2,6 +2,7 @@ const async = require('async');
 const request = require('request');
 const ro = require('./request-options');
 const Playbooks = require('./playbooks');
+const fp = require('lodash/fp');
 
 class Containers {
   constructor(logger, options) {
@@ -10,6 +11,7 @@ class Containers {
     this.playbooks = new Playbooks(logger, options);
     this.containers = [];
     this.containerResults = [];
+    this.playbookLabels = fp.flow(fp.split(','), fp.map(fp.trim), fp.sortedUniq)(options.playbookLabels);
   }
 
   getContainers(entities, callback) {
@@ -30,8 +32,7 @@ class Containers {
     const requestOptions = ro.getRequestOptions(this.integrationOptions);
     requestOptions.url = this.integrationOptions.host + '/rest/search';
     requestOptions.qs = {
-      query: entity.value,
-      categories: 'container'
+      query: entity.value
     };
 
     this.logger.trace({ options: requestOptions }, 'Request options for Container Search');
@@ -40,7 +41,7 @@ class Containers {
       this.logger.trace({ results: body, error: err, response: resp }, 'Results of entity lookup');
 
       if (err) {
-        return callback({ detail: 'Container Search HTTP Request Failed', err});
+        return callback({ detail: 'Container Search HTTP Request Failed', err });
       }
 
       if (resp.statusCode !== 200) {
@@ -60,8 +61,14 @@ class Containers {
     });
   }
 
-  _getContainerFromSearchResults(entity, { results }, next) {
-    const ids = results.map(({ id }) => id);
+  _getContainerFromSearchResults(entity, searchResults, next) {
+    const ids = fp.flow(
+      fp.get('results'),
+      fp.filter(({ category }) => category === 'artifact' || category === 'container'),
+      fp.map(({ id, category, url }) => (category === 'container' ? id : this._getContainerIdFromArtifactUrl(url))),
+      fp.compact,
+      fp.uniq
+    )(searchResults);
 
     this._getContainerResults(ids, entity, (err, containers) => {
       if (err) return next({ err, detail: 'Error getting Container Details' });
@@ -71,11 +78,14 @@ class Containers {
       }
       this.playbooks.getPlaybookRunHistory(ids, (err, containerPlaybookRuns) => {
         if (err) return next({ err, detail: 'Error getting Container Playbook History' });
-        this._formatContainers(entity, results, containers, containerPlaybookRuns, next);
+        this._formatContainers(entity, searchResults, containers, containerPlaybookRuns, next);
       });
     });
   }
 
+  _getContainerIdFromArtifactUrl(url) {
+    return fp.flow(fp.split('/'), fp.get(4), fp.toSafeInteger)(url);
+  }
   _getContainerResults(containerIds, entity, callback) {
     const containerHasBeenRequested = (containerId) =>
       this.containerResults.find((containerResult) => containerResult.id === containerId);
@@ -110,7 +120,11 @@ class Containers {
           next();
         });
       },
-      (err) => callback(err, this._uniqueBy('id', this.containerResults).filter(({ id }) => containerIds.includes(id)))
+      (err) =>
+        callback(
+          err,
+          this._uniqueBy('id', this.containerResults).filter(({ id }) => containerIds.includes(id))
+        )
     );
   }
 
@@ -118,21 +132,28 @@ class Containers {
     return arrayOfObjects.filter((item, index, self) => self.findIndex((_item) => _item[key] === item[key]) === index);
   }
 
-  _formatContainers(entity, results, containers, containerPlaybookRuns, next) {
+  _formatContainers(entity, searchResults, containers, containerPlaybookRuns, next) {
     this.containers.push({
       entity,
       containers: containers.map((container) => {
         const playbooksRanInfo = containerPlaybookRuns.find(({ containerId }) => containerId === container.id);
         return {
           ...container,
-          link: results.find(({ id }) => id == container.id).url,
+          link: fp.flow(
+            fp.get('results'),
+            fp.find(({ id }) => id == container.id),
+            fp.get('url')
+          )(searchResults),
           additionalPlaybooks: playbooksRanInfo.playbooksRanCount - playbooksRanInfo.playbooksRan.length,
           playbooksRanCount: playbooksRanInfo.playbooksRanCount,
           playbooksRan: playbooksRanInfo.playbooksRan
         };
       })
     });
-    next(null, this.containers.find((container) => container.entity.value === entity.value));
+    next(
+      null,
+      this.containers.find((container) => container.entity.value === entity.value)
+    );
   }
 
   getSummary(containers) {
@@ -147,18 +168,66 @@ class Containers {
     );
   }
 
-  createContainer(entityValue, callback) {
+  createContainer(entityValue, actionLabel, eventOwner, severity, sensitivity, callback) {
     this._getContainerSearchResults({ value: entityValue }, (err, containerSearchResults) => {
       this.logger.trace({ entityValue, containerSearchResults, err }, 'IN createContainer');
 
       if (err) return callback(err, null);
       if (!containerSearchResults) {
-        this._createContainerRequest(entityValue, (err, container) => {
-          this.logger.trace({container}, 'Created Container');
-          this._getCreatedContainer(entityValue, container.id, callback);
+        this._createContainerRequest(entityValue, actionLabel, eventOwner, severity, sensitivity, (err, container) => {
+          if (err) return callback({ err, detail: 'Failed to Create Container' });
+
+          this.logger.trace({ container }, 'Created Container');
+          this._createArtifactOnContainer(
+            entityValue,
+            container.id,
+            actionLabel,
+            eventOwner,
+            severity,
+            (err, artifactCreatioResult) => {
+              if (err) return callback({ err, detail: 'Failed to Create Artifact' });
+
+              this._getCreatedContainer(entityValue, container.id, callback);
+            }
+          );
         });
       } else {
         this._getCreatedContainer(entityValue, containerSearchResults.results[0].id, callback);
+      }
+    });
+  }
+
+  _createArtifactOnContainer(entityValue, containerId, actionLabel, eventOwner, severity, callback) {
+    const requestOptions = ro.getRequestOptions(this.integrationOptions);
+    requestOptions.url = this.integrationOptions.host + '/rest/artifact';
+    requestOptions.method = 'POST';
+    requestOptions.body = {
+      container_id: containerId,
+      name: entityValue,
+      label: actionLabel || 'events',
+      severity,
+      owner_id: fp.toSafeInteger(eventOwner),
+      tags: ['Uploaded_From_Polarity']
+    };
+
+    this.logger.trace({ options: requestOptions }, 'Request options for Artifact Creation Request');
+
+    request(requestOptions, (err, resp, body) => {
+      if (!resp || resp.statusCode !== 200 || err || !body.success) {
+        if (resp.statusCode == 404) {
+          this.logger.info({ entityValue }, 'Entity not in Phantom');
+          return callback();
+        } else {
+          this.logger.error({ error: err, body }, `error creating container with value ${entityValue}`);
+          return callback({ err: 'Failed to Create Artifact', detail: err });
+        }
+      }
+
+      this.logger.trace({ body }, 'Artifact Creation Request Result');
+      if (body.success) {
+        callback(null, body);
+      } else {
+        callback({ detail: 'Failed to Create Artifact', body });
       }
     });
   }
@@ -178,24 +247,25 @@ class Containers {
         callback(null, {
           ...containers[0],
           ...containerPlaybookRuns[0],
-          link: `${this.integrationOptions.host}/browse`
+          link: `${this.integrationOptions.host}/mission/${containers[0].id}`
         });
       });
     });
   }
 
-  _createContainerRequest(entityValue, callback) {
+  _createContainerRequest(entityValue, actionLabel, eventOwner, severity, sensitivity, callback) {
     const requestOptions = ro.getRequestOptions(this.integrationOptions);
     requestOptions.url = this.integrationOptions.host + '/rest/container';
     requestOptions.method = 'POST';
     requestOptions.body = {
-      label: 'events',
-      name: entityValue,
-      sensitivity: 'amber',
-      severity: 'medium',
+      label: actionLabel || 'events',
+      name: `Polarity - ${entityValue}`,
+      sensitivity,
+      severity,
       status: 'new',
+      owner_id: fp.toSafeInteger(eventOwner),
       container_type: 'default',
-      tags: ['polarity']
+      tags: ['Uploaded_From_Polarity']
     };
 
     this.logger.trace({ options: requestOptions }, 'Request options for Container Creation Request');
@@ -215,6 +285,22 @@ class Containers {
       this.logger.trace({ body }, 'Adding response to result array');
 
       callback(null, body);
+    });
+  }
+  getUsers(callback) {
+    const requestOptions = ro.getRequestOptions(this.integrationOptions);
+    requestOptions.url = this.integrationOptions.host + '/rest/ph_user';
+    requestOptions.method = 'GET';
+
+    request(requestOptions, (err, resp, body) => {
+      if (!resp || resp.statusCode !== 200 || err || body.failed) {
+        this.logger.error({ error: err, body }, 'Failed to get Users');
+        return callback({ err, resp, details: 'Failed to get Users' });
+      }
+
+      this.logger.trace({ body }, 'Users');
+
+      callback(null, body.data);
     });
   }
 }
