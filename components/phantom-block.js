@@ -1,23 +1,29 @@
 polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias('block.data.details'),
   containers: Ember.computed.alias('details.results'),
-  onDemand: Ember.computed('block.entity.requestContext.requestType', function() {
+  onDemand: Ember.computed('block.entity.requestContext.requestType', function () {
     return this.block.entity.requestContext.requestType === 'OnDemand';
   }),
+  eventOwner: '',
+  severity: 'low',
+  sensitivity: 'white',
   newEventMessage: '',
   newEventPlaybookId: null,
   isRunning: false,
-  timezone: Ember.computed('Intl', function() {
+  timezone: Ember.computed('Intl', function () {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
+  init() {
+    const users = this.get('details.users');
+    this.set('eventOwner', users && users[0] && users[0].id );
+    this._super(...arguments);
+  },
   actions: {
-    changeTab: function(containerIndex, tabName) {
+    changeTab: function (containerIndex, tabName) {
       this.set(`containers.${containerIndex}.__activeTab`, tabName);
     },
-    runPlaybook: function(containerIndex, containerId, playbookId) {
+    runPlaybook: function (containerIndex, containerId, playbookId) {
       let self = this;
-
-      //console.info(`runPlaybook index: ${containerIndex}, containerId: ${containerId}, playbookId: ${playbookId} `);
 
       if (!playbookId) return self.setMessage(containerIndex, 'Select a playbook to run.');
 
@@ -28,7 +34,15 @@ polarity.export = PolarityComponent.extend({
 
       self
         .sendIntegrationMessage({
-          data: { entityValue: this.block.entity.value, containerId, playbookId }
+          data: {
+            entityValue: this.block.entity.value,
+            containerId,
+            playbookId,
+            playbooks: self.get('details.playbooks'),
+            eventOwner: self.get('eventOwner'),
+            severity: self.get('severity'),
+            sensitivity: self.get('sensitivity')
+          }
         })
         .then(({ err, detail, playbooksRan, playbooksRanCount, newContainer }) => {
           if (newContainer) {
@@ -39,17 +53,17 @@ polarity.export = PolarityComponent.extend({
           }
 
           if (err) {
-            self.setErrorMessage(containerIndex, `Run Failed: ${err.message}`);
+            self.setErrorMessage(containerIndex, `Run Failed: ${err.message || err.detail}`);
           } else {
-            if(detail){
+            if (detail) {
               self.setMessage(containerIndex, detail);
-            }else{
+            } else {
               self.setMessage(containerIndex, 'Successfully Run Playbook');
             }
           }
         })
         .catch((err) => {
-          if (err.message === "Integration Message Timout Error")
+          if (err.message === 'Integration Message Timout Error')
             return self.setErrorMessage(containerIndex, 'The playbook is taking longer than expect to complete');
 
           self.setErrorMessage(containerIndex, err.message);

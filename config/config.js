@@ -106,6 +106,16 @@ module.exports = {
       type: 'text',
       userCanEdit: false,
       adminOnly: false
+    },
+    {
+      key: 'showResultsWithLabels',
+      name: 'Only Show Events with Playbook Labels',
+      description:
+        'If checked, only Events that have one of your Playbook Labels listed will show up in the overlay.',
+      default: true,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: false
     }
   ]
 };
