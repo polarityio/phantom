@@ -53,7 +53,7 @@ polarity.export = PolarityComponent.extend({
           }
 
           if (err) {
-            self.setErrorMessage(containerIndex, `Run Failed: ${err}`);
+            self.setErrorMessage(containerIndex, `Run Failed: ${err.message || err.detail}`);
           } else {
             if (detail) {
               self.setMessage(containerIndex, detail);

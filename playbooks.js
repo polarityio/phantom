@@ -338,7 +338,7 @@ class Playbooks {
           if (body && (body.status === 'failed' || body.status === 'failure')) {
             return callback({
               error: body,
-              detail: 'Playbook Run Failed',
+              detail: 'Playbook ran and returned a failed status',
               message: body.message[0] === '{' ? JSON.parse(body.message).message : body.message
             });
           }
