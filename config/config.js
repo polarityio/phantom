@@ -101,8 +101,21 @@ module.exports = {
       key: 'playbookLabels',
       name: 'Playbook Labels',
       description:
-        'A comma separated list of Playbook Labels used to determine which playbooks can be run on Indicators in Phantom. By adding labels, you make more Playbooks available for you to run. The default value is "events".',
+        'A comma separated list of Playbook Labels used to determine which playbooks can be run on Indicators in Phantom. ' +
+        'By adding labels, you make more Playbooks available for you to run. The default value is "events".',
       default: 'events',
+      type: 'text',
+      userCanEdit: false,
+      adminOnly: false
+    },
+    {
+      key: 'playbookRepoNames',
+      name: 'Playbook Repository Names',
+      description:
+        'A comma separated list of Playbook Repository Names for Playbook Repositories you want to use. ' +
+        'If left blank, all Playbooks from all Playbook Repositories with be available for use. ' +
+        '(Must restart the integration for changes to take effect)',
+      default: '',
       type: 'text',
       userCanEdit: false,
       adminOnly: false
@@ -111,7 +124,8 @@ module.exports = {
       key: 'defaultSubmissionLabel',
       name: 'Default Submission Label',
       description:
-        "If left blank, the Event and Artifact Label will be the same as the Playbook's Label that was selected on Event creation.  If populated, this will be the label that is used by default on all Events and Artifacts that are submitted to Phantom.",
+        'This is the Default Label that is used on all Events and Artifacts that are submitted to Phantom. ' +
+        "If left blank, the Event and Artifact Label will be the same as the Playbook's Label that was selected on Event creation.",
       default: '',
       type: 'text',
       userCanEdit: false,

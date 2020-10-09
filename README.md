@@ -35,7 +35,7 @@ A comma separated list of Playbook Labels used to determine which playbooks can 
 
 ### Playbook Repository Names
 
-A comma separated list of Playbook Repository Names for Playbook Repositories you want to use. If left blank, all Playbooks from all Playbook Repositories with be available for use.
+A comma separated list of Playbook Repository Names for Playbook Repositories you want to use. If left blank, all Playbooks from all Playbook Repositories with be available for use. (Must restart the integration for changes to take effect)
 
 ### Default Submission Label
 
