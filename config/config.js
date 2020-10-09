@@ -108,10 +108,29 @@ module.exports = {
       adminOnly: false
     },
     {
+      key: 'defaultSubmissionLabel',
+      name: 'Default Submission Label',
+      description:
+        "If left blank, the Event and Artifact Label will be the same as the Playbook's Label that was selected on Event creation.  If populated, this will be the label that is used by default on all Events and Artifacts that are submitted to Phantom.",
+      default: '',
+      type: 'text',
+      userCanEdit: false,
+      adminOnly: false
+    },
+    {
       key: 'showResultsWithLabels',
       name: 'Only Show Events with Playbook Labels',
+      description: 'If checked, only Events that have one of your Playbook Labels listed will show up in the overlay.',
+      default: true,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: false
+    },
+    {
+      key: 'showCreateInDashboardLink',
+      name: 'Display Dashboard Creation Link',
       description:
-        'If checked, only Events that have one of your Playbook Labels listed will show up in the overlay.',
+        'If unchecked, the link that says "Create Event in Phantom Dashboard" will not be displayed on overlay results for New Entity Submission.',
       default: true,
       type: 'boolean',
       userCanEdit: false,

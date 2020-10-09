@@ -4,6 +4,7 @@ let Playbooks = require('./playbooks');
 const fp = require('lodash/fp');
 let Logger;
 
+
 function doLookup(entities, integrationOptions, callback) {
   const host = integrationOptions.host;
   integrationOptions.host = host.endsWith('/')
@@ -18,57 +19,61 @@ function doLookup(entities, integrationOptions, callback) {
     if (err) return callback(err, null);
     phantomContainers.getUsers((err, users) => {
       if (err) return callback(err, null);
+      phantomContainers.getCefFields((err, possibleCefFields) => {
+        if (err) return callback(err, null);
 
-      const lookupResults = containers.map(({ entity, containers }) => {
-        if (containers.length) {
-          const onlyShowContainerResultsWithLabels =
-            containers.length && phantomContainers.playbookLabels.length && integrationOptions.showResultsWithLabels;
+        const lookupResults = containers.map(({ entity, containers }) => {
+          if (containers.length) {
+            const onlyShowContainerResultsWithLabels =
+              containers.length && phantomContainers.playbookLabels.length && integrationOptions.showResultsWithLabels;
 
-          const containerResultsWithSpecifiedLabels = fp.filter(
-            fp.flow(fp.get('label'), (label) => fp.includes(label, phantomContainers.playbookLabels)),
-            containers
-          );
+            const containerResultsWithSpecifiedLabels = fp.filter(
+              fp.flow(fp.get('label'), (label) => fp.includes(label, phantomContainers.playbookLabels)),
+              containers
+            );
 
-          return {
-            entity,
-            isVolatile: true,
-            data:
-              onlyShowContainerResultsWithLabels && !containerResultsWithSpecifiedLabels.length
-                ? null
-                : {
-                    summary: phantomContainers.getSummary(containers),
-                    details: {
-                      results: onlyShowContainerResultsWithLabels ? containerResultsWithSpecifiedLabels : containers
+            return {
+              entity,
+              isVolatile: true,
+              data:
+                onlyShowContainerResultsWithLabels && !containerResultsWithSpecifiedLabels.length
+                  ? null
+                  : {
+                      summary: phantomContainers.getSummary(containers),
+                      details: {
+                        results: onlyShowContainerResultsWithLabels ? containerResultsWithSpecifiedLabels : containers
+                      }
                     }
-                  }
-          };
-        } else if (entity.requestContext.requestType === 'OnDemand') {
-          // this was an OnDemand request for an entity with no results
-          return {
-            entity,
-            // do not cache this value because there is no data yet
-            isVolatile: true,
-            data: {
-              summary: ['No Events Found'],
-              details: {
-                onDemand: true,
-                users,
-                entity: entity.value,
-                link: `${integrationOptions.host}/browse`
+            };
+          } else if (entity.requestContext.requestType === 'OnDemand') {
+            // this was an OnDemand request for an entity with no results
+            return {
+              entity,
+              // do not cache this value because there is no data yet
+              isVolatile: true,
+              data: {
+                summary: ['No Events Found'],
+                details: {
+                  onDemand: true,
+                  users,
+                  possibleCefFields,
+                  entity: entity.value,
+                  link: `${integrationOptions.host}/browse`
+                }
               }
-            }
-          };
-        } else {
-          // This was real-time request with no results so we cache it as a miss
-          return {
-            entity,
-            data: null
-          };
-        }
-      });
+            };
+          } else {
+            // This was real-time request with no results so we cache it as a miss
+            return {
+              entity,
+              data: null
+            };
+          }
+        });
 
-      Logger.trace({ lookupResults }, 'lookupResults');
-      callback(null, lookupResults);
+        Logger.trace({ lookupResults }, 'lookupResults');
+        callback(null, lookupResults);
+      });
     });
   });
 }
@@ -109,6 +114,7 @@ function runPlaybook(payload, integrationOptions, callback) {
   let eventOwner = payload.data.eventOwner;
   let severity = payload.data.severity;
   let sensitivity = payload.data.sensitivity;
+  let submitCefFields = payload.data.submitCefFields;
   let entityValue = payload.data.entityValue;
 
   let phantomPlaybooks = new Playbooks(Logger, integrationOptions);
@@ -124,6 +130,7 @@ function runPlaybook(payload, integrationOptions, callback) {
       eventOwner,
       severity,
       sensitivity,
+      submitCefFields,
       phantomPlaybooks,
       callback
     );
@@ -166,6 +173,7 @@ function _createContainerAndRunPlaybook(
   eventOwner,
   severity,
   sensitivity,
+  submitCefFields,
   phantomPlaybooks,
   callback
 ) {
@@ -182,6 +190,7 @@ function _createContainerAndRunPlaybook(
     eventOwner,
     severity,
     sensitivity,
+    submitCefFields,
     (err, containerWithoutPlaybooks) => {
       if (err) return callback({ errors: [{ err: 'Failed to Create Container', detail: err }] });
 

@@ -168,7 +168,7 @@ class Containers {
     );
   }
 
-  createContainer(entityValue, actionLabel, eventOwner, severity, sensitivity, callback) {
+  createContainer(entityValue, actionLabel, eventOwner, severity, sensitivity, submitCefFields, callback) {
     this._getContainerSearchResults({ value: entityValue }, (err, containerSearchResults) => {
       this.logger.trace({ entityValue, containerSearchResults, err }, 'IN createContainer');
 
@@ -184,6 +184,7 @@ class Containers {
             actionLabel,
             eventOwner,
             severity,
+            submitCefFields,
             (err, artifactCreatioResult) => {
               if (err) return callback({ err, detail: 'Failed to Create Artifact' });
 
@@ -197,16 +198,26 @@ class Containers {
     });
   }
 
-  _createArtifactOnContainer(entityValue, containerId, actionLabel, eventOwner, severity, callback) {
+  _createArtifactOnContainer(
+    entityValue,
+    containerId,
+
+    actionLabel,
+    eventOwner,
+    severity,
+    submitCefFields,
+    callback
+  ) {
     const requestOptions = ro.getRequestOptions(this.integrationOptions);
     requestOptions.url = this.integrationOptions.host + '/rest/artifact';
     requestOptions.method = 'POST';
     requestOptions.body = {
       container_id: containerId,
       name: entityValue,
-      label: actionLabel || 'events',
+      label: this.integrationOptions.defaultSubmissionLabel || actionLabel || 'events',
       severity,
       owner_id: fp.toSafeInteger(eventOwner),
+      cef: fp.zipObject(submitCefFields, fp.times(fp.constant(entityValue), submitCefFields.length)),
       tags: ['Uploaded_From_Polarity']
     };
 
@@ -258,7 +269,7 @@ class Containers {
     requestOptions.url = this.integrationOptions.host + '/rest/container';
     requestOptions.method = 'POST';
     requestOptions.body = {
-      label: actionLabel || 'events',
+      label: this.integrationOptions.defaultSubmissionLabel || actionLabel || 'events',
       name: `Polarity - ${entityValue}`,
       sensitivity,
       severity,
@@ -301,6 +312,23 @@ class Containers {
       this.logger.trace({ body }, 'Users');
 
       callback(null, body.data);
+    });
+  }
+  getCefFields(callback) {
+    const requestOptions = ro.getRequestOptions(this.integrationOptions);
+    requestOptions.url = this.integrationOptions.host + '/rest/cef';
+    requestOptions.qs = { page_size: 1000 };
+    requestOptions.method = 'GET';
+
+    request(requestOptions, (err, resp, body) => {
+      if (!resp || resp.statusCode !== 200 || err || body.failed) {
+        this.logger.error({ error: err, body }, 'Failed to get Users');
+        return callback({ err, resp, details: 'Failed to get Users' });
+      }
+
+      this.logger.trace({ body }, 'Users');
+
+      callback(null, fp.flow(fp.get('data'), fp.sortBy('name'), fp.map(fp.get('name')))(body));
     });
   }
 }
