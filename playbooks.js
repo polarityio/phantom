@@ -30,42 +30,56 @@ class Playbooks {
 
     if (playbooks) return callback(null, playbooks);
 
-    async.parallel(
-      fp.map((playbookLabel) => (done) => {
-        this.requestWithDefaults(
-          {
-            url: `${this.options.host}/rest/playbook`,
-            qs: {
-              _filter_labels__contains: `'${playbookLabel || 'events'}'`,
-              _exclude_category: "'deprecated'"
+    this.getPlaybookRepoIdsToKeep((err, playbookRepoIdsToKeep) => {
+      if (err) return callback(err);
+      async.parallel(
+        fp.map((playbookLabel) => (done) => {
+          this.requestWithDefaults(
+            {
+              url: `${this.options.host}/rest/playbook`,
+              qs: {
+                _filter_labels__contains: `'${playbookLabel || 'events'}'`,
+                _exclude_category: "'deprecated'",
+                page_size: 1000
+              },
+              method: 'GET'
             },
-            method: 'GET'
-          },
-          200,
-          (err, body) => {
-            if (err) return done({ err, detail: 'Error in getting List of Playbooks to Run' });
-            done(null, body.data);
+            200,
+            (err, body) => {
+              if (err) return done({ err, detail: 'Error in getting List of Playbooks to Run' });
+              done(null, body.data);
+            }
+          );
+        })(this.playbookLabels),
+        (err, results) => {
+          if (err) {
+            Logger.error({ err: err }, 'Error in onDetails lookup');
+            return callback(err);
           }
-        );
-      })(this.playbookLabels),
-      (err, results) => {
-        if (err) {
-          Logger.error({ err: err }, 'Error in onDetails lookup');
-          return callback(err);
+
+          const playbooksList = fp.flow(
+            fp.flatten,
+            fp.uniqBy('id'),
+            fp.thru((playbooks) =>
+              !playbookRepoIdsToKeep.length
+                ? playbooks
+                : fp.filter((playbook) => fp.includes(fp.get('scm', playbook), playbookRepoIdsToKeep), playbooks)
+            ),
+            fp.sortBy('name')
+          )(results);
+
+          const playbooks = fp.reduce((agg, label) => {
+            return {
+              ...agg,
+              [label]: fp.filter(fp.flow(fp.get('labels'), fp.includes(label)), playbooksList)
+            };
+          }, {})(this.playbookLabels);
+
+          playbooksCache.set(playbookLabelsStr, playbooks);
+          callback(null, playbooks);
         }
-
-        const playbooksList = fp.flow(fp.flatten, fp.uniqBy('id'))(results);
-        const playbooks = fp.reduce((agg, label) => {
-          return {
-            ...agg,
-            [label]: fp.filter(fp.flow(fp.get('labels'), fp.includes(label)), playbooksList)
-          };
-        }, {})(this.playbookLabels);
-
-        playbooksCache.set(playbookLabelsStr, playbooks);
-        callback(null, playbooks);
-      }
-    );
+      );
+    });
   }
 
   getPlaybookRunHistory(containerIds, callback) {
@@ -258,7 +272,7 @@ class Playbooks {
         return callback(err);
       }
 
-      this.logger.trace({ body }, 'Formatting Playbooks Ran Request Results');
+      this.logger.trace({ body }, 'Playbooks Name Request Results');
 
       callback(null, playbookId, body.name);
     });
@@ -349,6 +363,49 @@ class Playbooks {
           });
         }
       );
+    });
+  }
+
+  getPlaybookRepos(callback) {
+    let requestOptions = {};
+    requestOptions.url = this.options.host + '/rest/scm/';
+    requestOptions.qs = { page_size: 1000 };
+    requestOptions.json = true;
+
+    this.logger.trace({ options: requestOptions }, 'Request options for a Playbook Repo Request');
+
+    this.requestWithDefaults(requestOptions, 200, (err, body) => {
+      if (err) {
+        this.logger.error({ error: err, body }, 'Got error while trying to run playbook');
+        return callback(err);
+      }
+
+      this.logger.trace({ body }, 'Playbooks Repo Request Results');
+      
+      callback(null, body.data);
+    });
+  }
+
+  getPlaybookRepoIdsToKeep(callback) {
+    this.getPlaybookRepos((err, playbookRepos) => {
+      if (err) return callback(err);
+      
+      const playbookRepoNamesToFilter = fp.flow(
+        fp.split(','),
+        fp.map(fp.flow(fp.trim, fp.toLower))
+      )(this.options.playbookRepoNames);
+
+      const playbookRepoIdsToKeep = fp.flow(
+        fp.map((repoName) =>
+          fp.flow(
+            fp.find((playbookRepo) => repoName === fp.toLower(playbookRepo.name)),
+            fp.get('id')
+          )(playbookRepos)
+        ),
+        fp.compact
+      )(playbookRepoNamesToFilter);
+
+      callback(null, playbookRepoIdsToKeep);
     });
   }
 }
