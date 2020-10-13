@@ -33,6 +33,19 @@ The API token used to authenticate with the Phantom server.  See the official Ph
 
 A comma separated list of Playbook Labels used to determine which playbooks can be run on Indicators in Phantom. By adding labels, you make more Playbooks available for you to run. The default value is "events".
 
+### Playbook Repository Names
+
+A comma separated list of Playbook Repository Names for Playbook Repositories you want to use. If left blank, all Playbooks from all Playbook Repositories with be available for use. (Must restart the integration for changes to take effect)
+
+### Default Submission Label
+
+This is the Default Label that is used on all Events and Artifacts that are submitted to Phantom. If left blank, the Event and Artifact Label will be the same as the Playbook's Label that was selected on Event creation.
+
+### Display Dashboard Creation Link
+
+If unchecked, the link that says "Create Event in Phantom Dashboard" will not be displayed on overlay results for New Entity Submission.
+
+
 ### Only Show Events with Playbook Labels
 
 If checked, only Events that have one of your Playbook Labels listed will show up in the overlay.

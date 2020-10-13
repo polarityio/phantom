@@ -11,8 +11,9 @@
     <a class="p-link" href={{details.link}}>Create Event in Phantom Dashboard
       {{fa-icon "external-link-square" class="external-link-icon"}}</a>
   </div>
-
-  <h1 class="p-title">{{fa-icon "info-circle" fixedWidth=true}} Create Event and Run Playbook</h1>
+  {{#if block.userOptions.showCreateInDashboardLink}}
+    <h1 class="p-title">{{fa-icon "info-circle" fixedWidth=true}} Create Event and Run Playbook</h1>
+  {{/if}}
 
   <div class="selectContainer">
     <span class="p-value">Event Owner: </span>
@@ -41,13 +42,76 @@
   </div>
   <div class="selectContainer">
     <span class="p-value">Playbook: </span>
-    <select class="w-100" size=5 disabled={{isRunning}} onchange={{action (mut newEventPlaybookId) value="target.value"}}>
+    <select class="w-100" size=3 onchange={{action (mut newEventPlaybookId) value="target.value"}} disabled={{isRunning}}>
       {{#each details.playbooks as |playbook|}}
         <option value="{{playbook.id}}">{{playbook.name}}</option>
       {{/each}}
     </select>
   </div>
-
+  <div class="cef">
+    <span class="p-value">CEF Fields: </span>
+    <span class="cef-fields w-100">
+      {{#each selectedCefFields as |cefField index|}}
+        <span class="cef-field d-inline-flex align-items-center">
+          <span class="text-container {{unless isRunning "rounded-borders"}}" style="background-color:gray; color: white">
+              {{cefField.name}}
+          </span>
+          {{#if (not isRunning)}}
+            <span class="remove-icon-container" {{action "deleteCefField" cefField}}> 
+              {{fa-icon "times" class="cef-field-close-icon" fixedWidth=true}}
+            </span>
+          {{/if}}
+            
+        </span>
+      {{/each}}
+      {{#unless (or editingCefFields isRunning)}}
+        <button class="open-modal-btn" {{action "editCefFields"}}>
+          {{fa-icon "plus" class="open-modal-btn-icon" fixedWidth=true}}
+        </button>
+      {{/unless}}
+    </span>
+  </div>
+  <div class="cef-field-container">
+    
+    {{#if editingCefFields}}
+      <div class="show-cef-field-modal">
+        <div>
+          {{#power-select-multiple
+            triggerClass="form-control"
+            selected=selectedCefField
+            options=existingCefFields
+            searchEnabled=true
+            search=(action "searchCefFields")
+            placeholder="Search CEF Fields"
+            searchField="name"
+            searchMessage="Loading CEF Fields ..."
+            loadingMessage="Loading CEF Fields ..."
+            searchPlaceholder="Search CEF Fields"
+            closeOnSelect=true
+            disabled=interactionDisabled
+            onOpen=(action "searchCefFields" "")
+            onChange=(action (mut selectedCefField)) as |cefField|
+          }}
+            <span
+              class="p-cef-field"
+              style="word-break: break-word; margin: 10px 0; display:inline-block; line-height: 1.2em; font-size: 12px; box-shadow: 3px 3px 3px #888888; padding: 4px; border-radius: 4px; background-color:gray; color: white"
+            >
+              {{cefField.name}}
+              {{#if cefField.isNew}}
+                {{fa-icon "plus-circle" fixedWidth=true}}[custom-field]
+              {{else}}
+                {{fa-icon "check-circle" fixedWidth=true}}
+              {{/if}}
+            </span>
+          {{/power-select-multiple}}
+        </div>
+        <div class="modal-buttons">
+          <button class="misp-btn" {{action "editCefFields"}} disabled={{interactionDisabled}}>Cancel</button>
+          <button class="misp-btn" {{action "addCefFields"}} disabled={{interactionDisabled}}>Add CEF Fields</button>
+        </div>
+      </div>
+    {{/if}}
+  </div>
   <div class="d-flex flex-row justify-content-between align-items-center">
     <div>
       {{#if isRunning}}
@@ -78,8 +142,12 @@
       <span class="p-key">Name:</span>
       <span class="p-value">{{container.name}}</span>
     </div>
-    <a class="p-link" href={{container.link}}>View in Phantom
-      {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+    {{#if container.link}}
+      <a class="p-link" href={{container.link}}>
+        View in Phantom
+        {{fa-icon "external-link-square" class="external-link-icon"}}
+      </a>
+    {{/if}}
 
     <ul class="nav nav-tabs mt-2">
       <li class="nav-item">
@@ -147,7 +215,7 @@
           {{humanize playbook.name}}
         {{/power-select}}
         --}}
-        <select class="w-100" size=5 disabled={{container.__running}} onchange={{action (mut container.__selectedPlaybookId) value="target.value"}}>
+        <select class="w-100" size=5 onchange={{action (mut container.__selectedPlaybookId) value="target.value"}} disabled={{container.__running}}>
           {{#if block.isLoadingDetails}}
             <option>
               {{fa-icon "spinner-third" fixedWidth=true spin=true}} Loading...

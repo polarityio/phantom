@@ -4,6 +4,7 @@ polarity.export = PolarityComponent.extend({
   onDemand: Ember.computed('block.entity.requestContext.requestType', function () {
     return this.block.entity.requestContext.requestType === 'OnDemand';
   }),
+  possibleCefFields: Ember.computed.alias('details.possibleCefFields'),
   eventOwner: '',
   severity: 'low',
   sensitivity: 'white',
@@ -13,9 +14,19 @@ polarity.export = PolarityComponent.extend({
   timezone: Ember.computed('Intl', function () {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
+  selectedCefField: [],
+  selectedCefFields: [],
+  editingCefFields: false,
   init() {
+    this.set(
+      'existingCefFields',
+      (this.get('possibleCefFields') || []).map((orgTag) => ({
+        name: orgTag
+      }))
+    );
     const users = this.get('details.users');
-    this.set('eventOwner', users && users[0] && users[0].id );
+
+    this.set('eventOwner', users && users[0] && users[0].id);
     this._super(...arguments);
   },
   actions: {
@@ -35,13 +46,14 @@ polarity.export = PolarityComponent.extend({
       self
         .sendIntegrationMessage({
           data: {
-            entityValue: this.block.entity.value,
+            entityValue: self.block.entity.value,
             containerId,
             playbookId,
             playbooks: self.get('details.playbooks'),
             eventOwner: self.get('eventOwner'),
             severity: self.get('severity'),
-            sensitivity: self.get('sensitivity')
+            sensitivity: self.get('sensitivity'),
+            submitCefFields: self.get('selectedCefFields').map((selectedCefField) => selectedCefField.name)
           }
         })
         .then(({ err, detail, playbooksRan, playbooksRanCount, newContainer }) => {
@@ -72,6 +84,71 @@ polarity.export = PolarityComponent.extend({
           self.setRunning(containerIndex, false);
           self.get('block').notifyPropertyChange('data');
         });
+    },
+
+    editCefFields: function () {
+      this.toggleProperty('editingCefFields');
+      this.get('block').notifyPropertyChange('data');
+    },
+
+    deleteCefField: function (cefFieldToDelete) {
+      this.set(
+        'selectedCefFields',
+        this.get('selectedCefFields').filter((selectedCefField) => selectedCefField.name !== cefFieldToDelete.name)
+      );
+      this.get('block').notifyPropertyChange('data');
+    },
+
+    searchCefFields: function (term) {
+      const outerThis = this;
+      return new Ember.RSVP.Promise((resolve, reject) => {
+        if (term) {
+          const cefFields = outerThis
+            .get('possibleCefFields')
+            .filter(
+              (possibleCefField) =>
+                possibleCefField.toLowerCase().includes(term.toLowerCase()) &&
+                !this.selectedCefFields.some(
+                  (_selectedCefField) =>
+                    _selectedCefField.name.toLowerCase().trim() === possibleCefField.toLowerCase().trim()
+                )
+            )
+            .map((possibleCefField) => ({ name: possibleCefField }));
+
+          resolve([{ name: term, isNew: true }].concat(cefFields));
+        } else {
+          const existingCefFields = this.get('existingCefFields').filter(
+            (existingCefField) =>
+              !this.get('selectedCefFields').some(
+                (_selectedCefField) =>
+                  _selectedCefField.name.toLowerCase().trim() === existingCefField.name.toLowerCase().trim()
+              )
+          );
+          this.set('existingCefFields', existingCefFields);
+          this.get('block').notifyPropertyChange('data');
+
+          resolve(existingCefFields);
+        }
+      });
+    },
+
+    addCefFields: function () {
+      const selectedCefField = this.get('selectedCefField');
+      const selectedCefFields = this.get('selectedCefFields');
+
+      let newSelectedCefFields = selectedCefField
+        .filter(
+          (cefField) =>
+            !selectedCefFields.some(
+              (selectedCefField) => cefField.name.toLowerCase().trim() === selectedCefField.name.toLowerCase().trim()
+            )
+        )
+        .map((cefField) => Object.assign({}, cefField, { name: cefField.name.split(' ').join('_') }));
+
+      this.set('selectedCefFields', selectedCefFields.concat(newSelectedCefFields));
+      this.set('selectedCefField', []);
+      this.toggleProperty('editingCefFields');
+      this.get('block').notifyPropertyChange('data');
     }
   },
 

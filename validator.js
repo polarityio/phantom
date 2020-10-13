@@ -1,4 +1,5 @@
 const fp = require('lodash/fp');
+let Playbooks = require('./playbooks');
 
 function validateStringOption(errors, options, optionName, errMessage) {
   if (
@@ -36,7 +37,50 @@ function validateOptions(options, callback) {
         message: 'Playbook Labels are not allowed to include spaces.'
       }
     : [];
-  callback(null, errors.concat(commaSeparatedListError));
+  
+  const normalErrors = errors.concat(commaSeparatedListError);
+
+  if (!normalErrors.length && options.playbookRepoNames.value) {
+    const integrationOptions = fp.flow(
+      fp.keys,
+      fp.reduce((agg, key) => ({ ...agg, [key]: options[key].value }), {})
+    )(options);
+
+    let phantomPlaybooks = new Playbooks({ error: () => {}, trace: () => {} }, integrationOptions);
+    
+    phantomPlaybooks.getPlaybookRepos((err, playbookRepos) => {
+      if (err) return callback(null, [{ key: 'playbookRepoNames', message: err }]);
+
+      const playbookRepoNamesToFilter = fp.flow(
+        fp.split(','),
+        fp.map(fp.flow(fp.trim, fp.toLower))
+      )(options.playbookRepoNames.value);
+
+      const playbookRepoNameList = fp.map(fp.get('name'))(playbookRepos);
+      const playbookRepoNameListComp = fp.map(fp.toLower)(playbookRepoNameList);
+
+      const allPlaybookRepoNamesToFilterAreFound = fp.every(
+        (repoName) => fp.includes(repoName, playbookRepoNameListComp),
+        playbookRepoNamesToFilter
+      );
+      
+      allPlaybookRepoNamesToFilterAreFound
+        ? callback(null, [])
+        : callback(null, [
+            {
+              key: 'playbookRepoNames',
+              message:
+                "A Playbook Repository Name you've listed doesn't seem to match any known Repository Name in Phantom. All Repository Names you list must be one of the following: " +
+                fp.reduce(
+                  (agg, repoName) => `${agg}, "${repoName}"`,
+                  `"${fp.head(playbookRepoNameList)}"`
+                )(fp.tail(playbookRepoNameList))
+            }
+          ]);
+    });
+  } else {
+    callback(null, normalErrors);
+  }
 }
 
 module.exports = validateOptions;
