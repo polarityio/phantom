@@ -18,6 +18,7 @@ Polarity's Phantom integration allows automated queries against Phantom's contai
 
 To learn more about Phantom, visit the [official website](https://www.phantom.us).
 
+> *NOTE*: Your automation user must have the "Administrator" role for full search results to show up when searching
 
 ## Phantom Integration Options
 
