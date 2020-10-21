@@ -197,7 +197,10 @@ function _createContainerAndRunPlaybook(
       phantomPlaybooks.listPlaybooks((err, playbooks) => {
         if (err) return callback(err, null);
 
-        const container = { ...containerWithoutPlaybooks, playbooks: playbooks[containerWithoutPlaybooks.label] };
+        const container = {
+          ...containerWithoutPlaybooks,
+          playbooks: fp.flow(fp.get(containerWithoutPlaybooks.label), fp.uniqBy('id'))(playbooks)
+        };
 
         phantomPlaybooks.runPlaybookAgainstContainer(actionId, container.id, (err, resp) => {
           Logger.trace({ resp, err }, 'Result of playbook run');

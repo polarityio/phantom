@@ -83,6 +83,11 @@ polarity.export = PolarityComponent.extend({
         .finally(() => {
           self.setRunning(containerIndex, false);
           self.get('block').notifyPropertyChange('data');
+          setTimeout(() => {
+            this.setMessage(containerIndex, '');
+            self.setErrorMessage(containerIndex, '');
+            outerThis.get('block').notifyPropertyChange('data');
+          }, 5000);
         });
     },
 

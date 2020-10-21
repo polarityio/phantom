@@ -11,7 +11,12 @@ class Containers {
     this.playbooks = new Playbooks(logger, options);
     this.containers = [];
     this.containerResults = [];
-    this.playbookLabels = fp.flow(fp.split(','), fp.map(fp.trim), fp.sortedUniq)(options.playbookLabels);
+    this.playbookLabels = fp.flow(
+      fp.split(','),
+      fp.concat(options.defaultSubmissionLabel),
+      fp.map(fp.trim),
+      fp.sortedUniq
+    )(options.playbookLabels);
   }
 
   getContainers(entities, callback) {
@@ -32,7 +37,8 @@ class Containers {
     const requestOptions = ro.getRequestOptions(this.integrationOptions);
     requestOptions.url = this.integrationOptions.host + '/rest/search';
     requestOptions.qs = {
-      query: entity.value
+      query: entity.value,
+      page_size: this.integrationOptions.maxContainerResults
     };
 
     this.logger.trace({ options: requestOptions }, 'Request options for Container Search');
@@ -178,9 +184,11 @@ class Containers {
           if (err) return callback({ err, detail: 'Failed to Create Container' });
 
           this.logger.trace({ container }, 'Created Container');
+          const containerId = container && (container.id || container.existing_container_id);
+
           this._createArtifactOnContainer(
             entityValue,
-            container.id,
+            containerId,
             actionLabel,
             eventOwner,
             severity,
@@ -188,12 +196,12 @@ class Containers {
             (err, artifactCreatioResult) => {
               if (err) return callback({ err, detail: 'Failed to Create Artifact' });
 
-              this._getCreatedContainer(entityValue, container.id, callback);
+              this._getCreatedContainer(entityValue, containerId, callback);
             }
           );
         });
       } else {
-        this._getCreatedContainer(entityValue, containerSearchResults.results[0].id, callback);
+        this._getCreatedContainer(entityValue, fp.get('results[0].id')(containerSearchResults), callback);
       }
     });
   }
@@ -258,7 +266,7 @@ class Containers {
         callback(null, {
           ...containers[0],
           ...containerPlaybookRuns[0],
-          link: `${this.integrationOptions.host}/mission/${containers[0].id}`
+          link: `${this.integrationOptions.host}${containers[0] ? `/mission/${containers[0].id}` : '/browse'}`
         });
       });
     });
