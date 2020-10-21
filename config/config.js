@@ -132,6 +132,15 @@ module.exports = {
       adminOnly: false
     },
     {
+      key: 'maxContainerResults',
+      name: 'Max Container Results',
+      description: 'Limits the amount of Containers that will show up when searching.',
+      default: 10,
+      type: 'number',
+      userCanEdit: false,
+      adminOnly: false
+    },
+    {
       key: 'showResultsWithLabels',
       name: 'Only Show Events with Playbook Labels',
       description: 'If checked, only Events that have one of your Playbook Labels listed will show up in the overlay.',

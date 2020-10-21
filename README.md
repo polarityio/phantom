@@ -41,14 +41,18 @@ A comma separated list of Playbook Repository Names for Playbook Repositories yo
 
 This is the Default Label that is used on all Events and Artifacts that are submitted to Phantom. If left blank, the Event and Artifact Label will be the same as the Playbook's Label that was selected on Event creation.
 
+### Max Container Results
+
+Limits the amount of Containers that will show up when searching.
+
 ### Display Dashboard Creation Link
 
 If unchecked, the link that says "Create Event in Phantom Dashboard" will not be displayed on overlay results for New Entity Submission.
 
-
 ### Only Show Events with Playbook Labels
 
 If checked, only Events that have one of your Playbook Labels listed will show up in the overlay.
+
 
 
 ## Installation Instructions
