@@ -310,6 +310,7 @@ class Containers {
     const requestOptions = ro.getRequestOptions(this.integrationOptions);
     requestOptions.url = this.integrationOptions.host + '/rest/ph_user';
     requestOptions.method = 'GET';
+    requestOptions.qs = { page_size: 100 };
 
     request(requestOptions, (err, resp, body) => {
       if (!resp || resp.statusCode !== 200 || err || body.failed) {
