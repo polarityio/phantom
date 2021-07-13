@@ -24,6 +24,7 @@ module.exports = {
    */
   description: 'Phantom provides automation and security orchestration capabilities.',
   entityTypes: ['IPv4', 'hash', 'domain', 'email'],
+  defaultColor: 'light-purple',
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
    * the below files can be used in your custom template.
@@ -144,7 +145,7 @@ module.exports = {
       key: 'showResultsWithLabels',
       name: 'Only Show Events with Playbook Labels',
       description: 'If checked, only Events that have one of your Playbook Labels listed will show up in the overlay.',
-      default: true,
+      default: false,
       type: 'boolean',
       userCanEdit: false,
       adminOnly: false
