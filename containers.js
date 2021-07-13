@@ -145,11 +145,7 @@ class Containers {
         const playbooksRanInfo = containerPlaybookRuns.find(({ containerId }) => containerId === container.id);
         return {
           ...container,
-          link: fp.flow(
-            fp.get('results'),
-            fp.find(({ id }) => id == container.id),
-            fp.get('url')
-          )(searchResults),
+          link: `${this.integrationOptions.host}${container.id ? `/mission/${container.id}` : '/browse'}`,
           additionalPlaybooks: playbooksRanInfo.playbooksRanCount - playbooksRanInfo.playbooksRan.length,
           playbooksRanCount: playbooksRanInfo.playbooksRanCount,
           playbooksRan: playbooksRanInfo.playbooksRan

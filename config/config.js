@@ -151,6 +151,15 @@ module.exports = {
       adminOnly: false
     },
     {
+      key: 'compareLabels',
+      name: 'Compare Playbook and Event Labels',
+      description: 'If checked, only Playbooks that have the one of the labels on an Event will show up as possible Playbooks for you to run on that Event.',
+      default: true,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: false
+    },
+    {
       key: 'showCreateInDashboardLink',
       name: 'Display Dashboard Creation Link',
       description:
