@@ -87,7 +87,7 @@ function onDetails(lookupObject, integrationOptions, callback) {
 
     const details = fp.get('data.details')(lookupObject);
 
-    const allPlaybooks = fp.flow(fp.flatMap(fp.identity), fp.uniqBy('id'))(playbooks);
+    const allPlaybooks = fp.flow(fp.flatMap(fp.identity), fp.uniqBy('id'), fp.sortBy('id'))(playbooks);
     lookupObject.data.details = {
       ...details,
       ...(details.onDemand && {

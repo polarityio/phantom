@@ -25,7 +25,7 @@ class Playbooks {
   }
 
   listPlaybooks(callback) {
-    const playbookLabelsStr = this.playbookLabels.toString();
+    const playbookLabelsStr = this.options.compareLabels + this.playbookLabels.toString();
     const playbooks = playbooksCache.get(playbookLabelsStr);
 
     if (playbooks) return callback(null, playbooks);
@@ -93,7 +93,11 @@ class Playbooks {
               ...agg,
               [label]: fp.filter(fp.flow(fp.get('labels'), fp.includes(label)), playbooksList)
             };
-          }, {})(this.playbookLabels);
+          }, {})(
+            this.options.compareLabels
+              ? this.playbookLabels
+              : fp.flow(fp.flatMap(fp.get('labels')), fp.uniq)(playbooksList)
+          );
 
           playbooksCache.set(playbookLabelsStr, playbooks);
           callback(null, playbooks);
