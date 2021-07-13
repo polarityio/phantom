@@ -50,6 +50,11 @@ Limits the amount of Containers that will show up when searching.
 
 If unchecked, the link that says "Create Event in Phantom Dashboard" will not be displayed on overlay results for New Entity Submission.
 
+### Compare Playbook and Event Labels
+
+If checked, only Playbooks that have the one of the labels on an Event will show up as possible Playbooks for you to run on that Event.
+
+
 ### Only Show Events with Playbook Labels
 
 If checked, only Events that have one of your Playbook Labels listed will show up in the overlay.

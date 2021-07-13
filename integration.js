@@ -4,12 +4,9 @@ let Playbooks = require('./playbooks');
 const fp = require('lodash/fp');
 let Logger;
 
-
 function doLookup(entities, integrationOptions, callback) {
   const host = integrationOptions.host;
-  integrationOptions.host = host.endsWith('/')
-    ? host.slice(0, -1)
-    : host;
+  integrationOptions.host = host.endsWith('/') ? host.slice(0, -1) : host;
 
   Logger.trace({ entities, options: integrationOptions }, 'Entities received by integration');
 
@@ -84,20 +81,24 @@ function startup(logger) {
 
 function onDetails(lookupObject, integrationOptions, callback) {
   let phantomPlaybooks = new Playbooks(Logger, integrationOptions);
-  
+
   phantomPlaybooks.listPlaybooks((err, playbooks) => {
     if (err) return callback(err, null);
 
     const details = fp.get('data.details')(lookupObject);
 
+    const allPlaybooks = fp.flow(fp.flatMap(fp.identity), fp.uniqBy('id'), fp.sortBy('id'))(playbooks);
     lookupObject.data.details = {
       ...details,
       ...(details.onDemand && {
-        playbooks: fp.flow(fp.flatMap(fp.identity), fp.uniqBy('id'))(playbooks)
+        playbooks: allPlaybooks
       }),
       results: fp.flow(
         fp.getOr([], 'data.details.results'),
-        fp.map((container) => ({ ...container, playbooks: playbooks[container.label] }))
+        fp.map((container) => ({
+          ...container,
+          playbooks: integrationOptions.compareLabels ? playbooks[container.label] : allPlaybooks
+        }))
       )(lookupObject)
     };
 

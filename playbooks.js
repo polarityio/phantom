@@ -25,7 +25,7 @@ class Playbooks {
   }
 
   listPlaybooks(callback) {
-    const playbookLabelsStr = this.playbookLabels.toString();
+    const playbookLabelsStr = this.options.compareLabels + this.playbookLabels.toString();
     const playbooks = playbooksCache.get(playbookLabelsStr);
 
     if (playbooks) return callback(null, playbooks);
@@ -33,24 +33,44 @@ class Playbooks {
     this.getPlaybookRepoIdsToKeep((err, playbookRepoIdsToKeep) => {
       if (err) return callback(err);
       async.parallel(
-        fp.map((playbookLabel) => (done) => {
-          this.requestWithDefaults(
-            {
-              url: `${this.options.host}/rest/playbook`,
-              qs: {
-                _filter_labels__contains: `'${playbookLabel || 'events'}'`,
-                _exclude_category: "'deprecated'",
-                page_size: 1000
-              },
-              method: 'GET'
-            },
-            200,
-            (err, body) => {
-              if (err) return done({ err, detail: 'Error in getting List of Playbooks to Run' });
-              done(null, body.data);
-            }
-          );
-        })(this.playbookLabels),
+        this.options.compareLabels
+          ? fp.map((playbookLabel) => (done) => {
+              this.requestWithDefaults(
+                {
+                  url: `${this.options.host}/rest/playbook`,
+                  qs: {
+                    _filter_labels__contains: `'${playbookLabel || 'events'}'`,
+                    _exclude_category: "'deprecated'",
+                    page_size: 1000
+                  },
+                  method: 'GET'
+                },
+                200,
+                (err, body) => {
+                  if (err) return done({ err, detail: 'Error in getting List of Playbooks to Run' });
+                  done(null, body.data);
+                }
+              );
+            })(this.playbookLabels)
+          : [
+              (done) => {
+                this.requestWithDefaults(
+                  {
+                    url: `${this.options.host}/rest/playbook`,
+                    qs: {
+                      _exclude_category: "'deprecated'",
+                      page_size: 1000
+                    },
+                    method: 'GET'
+                  },
+                  200,
+                  (err, body) => {
+                    if (err) return done({ err, detail: 'Error in getting List of Playbooks to Run' });
+                    done(null, body.data);
+                  }
+                );
+              }
+            ],
         (err, results) => {
           if (err) {
             Logger.error({ err: err }, 'Error in onDetails lookup');
@@ -73,7 +93,11 @@ class Playbooks {
               ...agg,
               [label]: fp.filter(fp.flow(fp.get('labels'), fp.includes(label)), playbooksList)
             };
-          }, {})(this.playbookLabels);
+          }, {})(
+            this.options.compareLabels
+              ? this.playbookLabels
+              : fp.flow(fp.flatMap(fp.get('labels')), fp.uniq)(playbooksList)
+          );
 
           playbooksCache.set(playbookLabelsStr, playbooks);
           callback(null, playbooks);
@@ -381,7 +405,7 @@ class Playbooks {
       }
 
       this.logger.trace({ body }, 'Playbooks Repo Request Results');
-      
+
       callback(null, body.data);
     });
   }
@@ -389,7 +413,7 @@ class Playbooks {
   getPlaybookRepoIdsToKeep(callback) {
     this.getPlaybookRepos((err, playbookRepos) => {
       if (err) return callback(err);
-      
+
       const playbookRepoNamesToFilter = fp.flow(
         fp.split(','),
         fp.map(fp.flow(fp.trim, fp.toLower))
