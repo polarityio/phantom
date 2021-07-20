@@ -97,7 +97,9 @@ function onDetails(lookupObject, integrationOptions, callback) {
         fp.getOr([], 'data.details.results'),
         fp.map((container) => ({
           ...container,
-          playbooks: integrationOptions.compareLabels ? playbooks[container.label] : allPlaybooks
+          playbooks: integrationOptions.compareLabels
+            ? fp.flow(fp.get(container.label), fp.concat(fp.getOr([], '*', playbooks)), fp.sortBy('name'))(playbooks)
+            : allPlaybooks
         }))
       )(lookupObject)
     };
