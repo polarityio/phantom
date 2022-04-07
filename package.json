@@ -6,7 +6,7 @@
   "license": "MIT",
   "author": "Polarity",
   "dependencies": {
-    "async": "^2.6",
+    "async": "^3.2.2",
     "lodash": "^4.17.20",
     "moment": "^2.24.0",
     "node-cache": "^5.1.2",
