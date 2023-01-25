@@ -16,7 +16,7 @@
     "bunyan": "^1.8.12",
     "chai": "^4.1.2",
     "mocha": "^8.1.2",
-    "mountebank": "^2.2.1",
+    "mountebank": "^2.8.2",
     "node-ssh": "^13.0.1",
     "node-watch": "^0.5.5",
     "scp2": "^0.5.0"
