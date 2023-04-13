@@ -1,8 +1,8 @@
 {
   "polarityIntegrationUuid": "c003dd20-cce1-11ed-aeee-075d3490155d",
-  "name": "Phantom",
-  "acronym": "PH",
-  "description": "Phantom provides automation and security orchestration capabilities.",
+  "name": "Splunk SOAR",
+  "acronym": "SOAR",
+  "description": "Splunk SOAR provides automation and security orchestration capabilities.",
   "entityTypes": [
     "IPv4",
     "hash",
@@ -37,7 +37,7 @@
     {
       "key": "host",
       "name": "Server",
-      "description": "The hostname of the Phantom server.",
+      "description": "The hostname of the Splunk SOAR server.",
       "default": "",
       "type": "text",
       "userCanEdit": false,
@@ -45,8 +45,8 @@
     },
     {
       "key": "token",
-      "name": "Phantom API Token",
-      "description": "Phantom API Token",
+      "name": "Splunk SOAR API Token",
+      "description": "Splunk SOAR API Token",
       "default": "",
       "type": "password",
       "userCanEdit": true,
@@ -55,7 +55,7 @@
     {
       "key": "playbookLabels",
       "name": "Playbook Labels",
-      "description": "A comma separated list of Playbook Labels used to determine which playbooks can be run on Indicators in Phantom. By adding labels, you make more Playbooks available for you to run. The default value is \"events\".",
+      "description": "A comma separated list of Playbook Labels used to determine which playbooks can be run on Indicators in Splunk SOAR. By adding labels, you make more Playbooks available for you to run. The default value is \"events\".",
       "default": "events",
       "type": "text",
       "userCanEdit": false,
@@ -73,7 +73,7 @@
     {
       "key": "defaultSubmissionLabel",
       "name": "Default Submission Label",
-      "description": "This is the Default Label that is used on all Events and Artifacts that are submitted to Phantom. If left blank, the Event and Artifact Label will be the same as the Playbook's Label that was selected on Event creation.",
+      "description": "This is the Default Label that is used on all Events and Artifacts that are submitted to Splunk SOAR. If left blank, the Event and Artifact Label will be the same as the Playbook's Label that was selected on Event creation.",
       "default": "",
       "type": "text",
       "userCanEdit": false,

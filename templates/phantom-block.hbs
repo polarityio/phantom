@@ -5,10 +5,10 @@
     <span class="p-value">{{details.entity}}</span>
   </div>
   <p>
-    Status: <b>This Entity does not exist in Phantom</b>
+    Status: <b>This Entity does not exist in Splunk SOAR</b>
   </p>
   <div class="view-in-ts create-in-phantom">
-    <a class="p-link" href={{details.link}}>Create Event in Phantom Dashboard
+    <a class="p-link" href={{details.link}}>Create Event in Splunk SOAR Dashboard
       {{fa-icon "external-link-square" class="external-link-icon"}}</a>
   </div>
   {{#if block.userOptions.showCreateInDashboardLink}}
@@ -144,7 +144,7 @@
     </div>
     {{#if container.link}}
       <a class="p-link" href={{container.link}}>
-        View in Phantom
+        View in Splunk SOAR
         {{fa-icon "external-link-square" class="external-link-icon"}}
       </a>
     {{/if}}
