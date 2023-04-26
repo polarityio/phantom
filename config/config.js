@@ -5,7 +5,7 @@ module.exports = {
    * @type String
    * @required
    */
-  name: 'Phantom',
+  name: 'Splunk SOAR',
   /**
    * The acronym that appears in the notification window when information from this integration
    * is displayed.  Note that the acronym is included as part of each "tag" in the summary information
@@ -15,14 +15,14 @@ module.exports = {
    * @type String
    * @required
    */
-  acronym: 'PH',
+  acronym: 'SOAR',
   /**
    * Description for this integration which is displayed in the Polarity integrations user interface
    *
    * @type String
    * @optional
    */
-  description: 'Phantom provides automation and security orchestration capabilities.',
+  description: 'Splunk SOAR provides automation and security orchestration capabilities.',
   entityTypes: ['IPv4', 'hash', 'domain', 'email'],
   defaultColor: 'light-purple',
   /**
@@ -83,7 +83,7 @@ module.exports = {
     {
       key: 'host',
       name: 'Server',
-      description: 'The hostname of the Phantom server.',
+      description: 'The hostname of the Splunk SOAR server.',
       default: '',
       type: 'text',
       userCanEdit: false,
@@ -91,8 +91,8 @@ module.exports = {
     },
     {
       key: 'token',
-      name: 'Phantom API Token',
-      description: 'Phantom API Token',
+      name: 'Splunk SOAR API Token',
+      description: 'Splunk SOAR API Token',
       default: '',
       type: 'password',
       userCanEdit: true,
@@ -102,7 +102,7 @@ module.exports = {
       key: 'playbookLabels',
       name: 'Playbook Labels',
       description:
-        'A comma separated list of Playbook Labels used to determine which playbooks can be run on Indicators in Phantom. ' +
+        'A comma separated list of Playbook Labels used to determine which playbooks can be run on Indicators in Splunk SOAR. ' +
         'By adding labels, you make more Playbooks available for you to run. The default value is "events".',
       default: 'events',
       type: 'text',
@@ -125,7 +125,7 @@ module.exports = {
       key: 'defaultSubmissionLabel',
       name: 'Default Submission Label',
       description:
-        'This is the Default Label that is used on all Events and Artifacts that are submitted to Phantom. ' +
+        'This is the Default Label that is used on all Events and Artifacts that are submitted to Splunk SOAR. ' +
         "If left blank, the Event and Artifact Label will be the same as the Playbook's Label that was selected on Event creation.",
       default: '',
       type: 'text',
