@@ -390,7 +390,7 @@ class Playbooks {
 
           if (err === 'running') {
             return callback(null, {
-              detail: 'The playbook is still running.  Please check your Phantom dashboard for details.'
+              detail: 'The playbook is still running.  Please check your Splunk SOAR dashboard for details.'
             });
           }
 
