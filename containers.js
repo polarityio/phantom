@@ -107,7 +107,7 @@ class Containers {
         request(requestOptions, (err, resp, body) => {
           if (!resp || resp.statusCode !== 200) {
             if (resp.statusCode == 404) {
-              this.logger.info({ entity }, 'Entity not in Phantom');
+              this.logger.info({ entity }, 'Entity not in Splunk SOAR');
               return next();
             } else {
               this.logger.error(
@@ -230,7 +230,7 @@ class Containers {
     request(requestOptions, (err, resp, body) => {
       if (!resp || resp.statusCode !== 200 || err || !body.success) {
         if (resp.statusCode == 404) {
-          this.logger.info({ entityValue }, 'Entity not in Phantom');
+          this.logger.info({ entityValue }, 'Entity not in Splunk SOAR');
           return callback();
         } else {
           this.logger.error({ error: err, body }, `error creating container with value ${entityValue}`);
@@ -288,7 +288,7 @@ class Containers {
     request(requestOptions, (err, resp, body) => {
       if (!resp || resp.statusCode !== 200 || err || !body.success) {
         if (resp.statusCode == 404) {
-          this.logger.info({ entityValue }, 'Entity not in Phantom');
+          this.logger.info({ entityValue }, 'Entity not in Splunk SOAR');
           this.containers.push({ entityValue, containers: [] });
           return callback();
         } else {

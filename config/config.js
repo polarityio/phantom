@@ -82,8 +82,8 @@ module.exports = {
   options: [
     {
       key: 'host',
-      name: 'Server',
-      description: 'The hostname of the Splunk SOAR server.',
+      name: 'Splunk SOAR Server URL',
+      description: 'The Server URL where the Splunk SOAR API instance is located.  The Server URL should include the schema (https://) and the fully qualified domain name or IP address of your Splunk SOAR instance.',
       default: '',
       type: 'text',
       userCanEdit: false,
@@ -95,8 +95,8 @@ module.exports = {
       description: 'Splunk SOAR API Token',
       default: '',
       type: 'password',
-      userCanEdit: true,
-      adminOnly: false
+      userCanEdit: false,
+      adminOnly: true
     },
     {
       key: 'playbookLabels',
@@ -153,7 +153,8 @@ module.exports = {
     {
       key: 'compareLabels',
       name: 'Compare Playbook and Event Labels',
-      description: 'If checked, only Playbooks that have the one of the labels on an Event will show up as possible Playbooks for you to run on that Event.',
+      description:
+        'If checked, only Playbooks that have the one of the labels on an Event will show up as possible Playbooks for you to run on that Event.',
       default: true,
       type: 'boolean',
       userCanEdit: false,
@@ -163,7 +164,7 @@ module.exports = {
       key: 'showCreateInDashboardLink',
       name: 'Display Dashboard Creation Link',
       description:
-        'If unchecked, the link that says "Create Event in Phantom Dashboard" will not be displayed on overlay results for New Entity Submission.',
+        'If checked, a "Create Event in Splunk SOAR Dashboard" link will be displayed for New Entity Submissions.',
       default: true,
       type: 'boolean',
       userCanEdit: false,

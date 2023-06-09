@@ -1,6 +1,6 @@
 {
-  "name": "phantom",
-  "version": "3.2.9",
+  "name": "splunk_soar",
+  "version": "3.2.10",
   "main": "./integration.js",
   "private": true,
   "license": "MIT",
