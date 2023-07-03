@@ -1,5 +1,5 @@
 const async = require('async');
-const request = require('request');
+const request = require('postman-request');
 const ro = require('./request-options');
 const Playbooks = require('./playbooks');
 const fp = require('lodash/fp');
