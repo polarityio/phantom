@@ -1,4 +1,4 @@
-let request = require('request');
+let request = require('postman-request');
 let moment = require('moment');
 let async = require('async');
 let fp = require('lodash/fp');
