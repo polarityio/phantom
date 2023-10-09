@@ -1,3 +1,12 @@
+/*
+TODO: Tests are being removed until the dependencies can be replaced with ones that do not have security vulnerabilities
+  "devDependencies": {
+    "bunyan": "^1.8.12",
+    "chai": "~3.5",
+    "mocha": "~3.2",
+    "mountebank": "^1.14.0",
+  },
+
 let assert = require('chai').assert;
 
 let bunyan = require('bunyan');
@@ -203,3 +212,4 @@ describe('Polarity Phantom Integration', () => {
         });
     });
 });
+*/
