@@ -1,6 +1,6 @@
 {
   "name": "splunk_soar",
-  "version": "3.2.13",
+  "version": "3.2.14",
   "main": "./integration.js",
   "private": true,
   "license": "MIT",
@@ -10,7 +10,7 @@
     "lodash": "^4.17.21",
     "moment": "^2.24.0",
     "node-cache": "^5.1.2",
-    "postman-request": "^2.88.1-postman.32"
+    "postman-request": "^2.88.1-postman.33"
   },
   "scripts": {
     "pretest": "mb start --configfile imposters.json &",
