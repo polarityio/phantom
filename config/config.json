@@ -3,12 +3,7 @@
   "name": "Splunk SOAR",
   "acronym": "SOAR",
   "description": "Splunk SOAR provides automation and security orchestration capabilities.",
-  "entityTypes": [
-    "IPv4",
-    "hash",
-    "domain",
-    "email"
-  ],
+  "entityTypes": ["IPv4", "MD5", "SHA1", "SHA256", "domain", "email"],
   "defaultColor": "light-purple",
   "styles": [
     "./styles/phantom.less"
@@ -22,13 +17,6 @@
     }
   },
   "onDemandOnly": true,
-  "request": {
-    "cert": "",
-    "key": "",
-    "passphrase": "",
-    "ca": "",
-    "proxy": ""
-  },
   "logging": {
     "level": "info"
   },
