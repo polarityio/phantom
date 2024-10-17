@@ -23,7 +23,7 @@ module.exports = {
    * @optional
    */
   description: 'Splunk SOAR provides automation and security orchestration capabilities.',
-  entityTypes: ['IPv4', 'hash', 'domain', 'email'],
+  entityTypes: ['IPv4', 'MD5', 'SHA1', 'SHA256', 'domain', 'email'],
   defaultColor: 'light-purple',
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
@@ -61,7 +61,7 @@ module.exports = {
     ca: '',
     // An HTTP proxy to be used. Supports proxy Auth with Basic Auth, identical to support for
     // the url parameter (by embedding the auth info in the uri)
-    proxy: ""
+    proxy: ''
   },
   logging: {
     level: 'info' //trace, debug, info, warn, error, fatal
@@ -77,7 +77,8 @@ module.exports = {
     {
       key: 'host',
       name: 'Splunk SOAR Server URL',
-      description: 'The Server URL where the Splunk SOAR API instance is located.  The Server URL should include the schema (https://) and the fully qualified domain name or IP address of your Splunk SOAR instance.',
+      description:
+        'The Server URL where the Splunk SOAR API instance is located.  The Server URL should include the schema (https://) and the fully qualified domain name or IP address of your Splunk SOAR instance.',
       default: '',
       type: 'text',
       userCanEdit: false,
